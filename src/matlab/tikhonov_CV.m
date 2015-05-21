@@ -21,7 +21,7 @@ function [X,cv_error] = tikhonov_CV(J,Y,lambda,nfold,U,S,V,PLOT)
 % 16.02.12 Gustavo
 
 
-%hello
+%hello again
 
     % set PLOT to false if not set
     if nargin<8
