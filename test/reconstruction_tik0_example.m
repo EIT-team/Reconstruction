@@ -1,8 +1,6 @@
 %these relative paths only work on windows I think...
 
 addpath('../src/matlab');
-
-
 load('../resources/mesh/Ex_Cyl_Small.mat'); %load the Mesh and the Jacobian (from fwd solver), and the boundary votlages DV
 
 [h]=DisplayBoundaries(Mesh);

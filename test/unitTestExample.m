@@ -1,23 +1,23 @@
-function tests = axesPropertiesTest
+function tests = test
 tests = functiontests(localfunctions);
 end
 
 
 function testVerify(testCase)
-% addpath('../src/matlab');
-% load('../resources/mesh/Ex_Cyl_Small.mat'); %load the Mesh and the Jacobian (from fwd solver), and the boundary votlages DV
-% %[h]=DisplayBoundaries(Mesh);
-% %create hex mesh and hex jacobian - 10mm elements
-% [Mesh_hex,J_hex]=convert_fine2coarse(Mesh.Tetra,Mesh.Nodes,J,0.2);
-% n_J = size(J_hex,1);% J is the Jacobian matrix
-% nLambda=3000;
-% %SVD
-% [U,S,V] = svd(J_hex,'econ');% Singular value decomposition
-% disp(sprintf('SVD done: %.2f min.',toc/60))
-% %pick lambda searchspace
-% lambda = logspace(-20,-2,nLambda);
-% %Do inversion
-% [X,cv_error] = tikhonov_CV(J_hex,DV,lambda,n_J,U,S,V,0);% DV is the measurement.
+addpath('../src/matlab');
+load('../resources/mesh/Ex_Cyl_Small.mat'); %load the Mesh and the Jacobian (from fwd solver), and the boundary votlages DV
+%[h]=DisplayBoundaries(Mesh);
+%create hex mesh and hex jacobian - 10mm elements
+[Mesh_hex,J_hex]=convert_fine2coarse(Mesh.Tetra,Mesh.Nodes,J,0.2);
+n_J = size(J_hex,1);% J is the Jacobian matrix
+nLambda=3000;
+%SVD
+[U,S,V] = svd(J_hex,'econ');% Singular value decomposition
+disp(sprintf('SVD done: %.2f min.',toc/60))
+%pick lambda searchspace
+lambda = logspace(-20,-2,nLambda);
+%Do inversion
+[X,cv_error] = tikhonov_CV(J_hex,DV,lambda,n_J,U,S,V,0);% DV is the measurement.
 
 verifyEqual(testCase, 1,1)
 verifyEqual(testCase, 1,1)
@@ -27,7 +27,7 @@ end
 function testA(testCase)
 verifyEqual(testCase, 1,3)
 verifyEqual(testCase, 1,1)
-verifyEqual(testCase, 'x',2,'sdf')
+%verifyEqual(testCase, 'x',2,'sdf')
 end
 
 
@@ -61,15 +61,16 @@ end
 % rmdir(testCase.TestData.tmpFolder)
 % end
 % 
-% function setup(testCase)
-% testCase.TestData.Figure = openfig(testCase.TestData.figName);
-% testCase.TestData.Axes = findobj(testCase.TestData.Figure,...
-%     'Type','Axes');
-% end
-% 
-% function teardown(testCase)
-% close(testCase.TestData.Figure)
-% end
+ function setup(testCase)
+ %testCase.TestData.Figure = openfig(testCase.TestData.figName);
+ %testCase.TestData.Axes = findobj(testCase.TestData.Figure,...
+ %    'Type','Axes');
+ end
+ 
+ function teardown(testCase)
+ disp(testCase.TestData)
+ %close(testCase.TestData.Figure)
+ end
 % 
 % 
 % 
