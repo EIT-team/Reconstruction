@@ -1,7 +1,6 @@
-function [JJinv_CV_sets SD_all] = precompute_recon(J,lambda_range,n_lambda)
-% precompute_Recon : Precomputes Jinv and noise matrices for all values of
-% lambda, to speed up reconstruction, plus a few other performance tweaks
-% to speed up processing (About 40x faster than previous method)
+% precompute_Recon : Precomputes Jinv (using SVD) and noise matrices for all
+% values of lambda, to speed up reconstruction, plus a few other performance
+% tweaks to speed up processing (About 40x faster than previous method)
 %
 %   Inputs
 %   J           : Jacobian matrix (n_prt * n_mesh_elements)
@@ -22,15 +21,18 @@ function [JJinv_CV_sets SD_all] = precompute_recon(J,lambda_range,n_lambda)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Define range of lambda values
+n_lambda = 100;
+lambda_range = [-15 -2];
 lambda = logspace(lambda_range(1),lambda_range(2),n_lambda);
 
-%Do SVD and precompute JVU to prevent duplication later
+%Do SVD and precompute JV to prevent duplication later
 tic
-[n_prt, n_J] = size(J);
+[n_prt, n_mesh] = size(J);
 
 [U,S,V] = svd(J,'econ');
 sv = diag(S); %Singluar values
-JVU = J*V*U';
+JV = J*V;
 disp(sprintf('SVD done: %.2f min.',toc/60))
 
 
@@ -53,7 +55,7 @@ tic
 %Jinv is 
 for i = 1:n_lambda
     sv_i = sv+lambda(i)./sv;
-    JJinv(:,:,i) = JVU*diag(1./sv_i);
+    JJinv(:,:,i) = JV*diag(1./sv_i)*U';
 end
 
 
@@ -68,11 +70,11 @@ toc
 
 % Create noise correction for all values of lambda, another big time saving
 % bit.
+
 tic
 UtNoise = U'*Noise';
-sv = diag(S);
 
-SD_all = zeros(n_J,n_lambda);
+SD_all = zeros(n_mesh,n_lambda);
 for i = 1:n_lambda
     sv_i = sv+lambda(i)./sv;
     SD_all(:,i) = std(V*(diag(1./sv_i)*UtNoise),0,2);
@@ -80,4 +82,6 @@ end
 
 disp('Generated noise for all lambda values')
 toc
+
+clear S Noise JJinv IN OUT JV
 
