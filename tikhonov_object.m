@@ -1,14 +1,22 @@
 classdef tikhonov_object < handle
+    % Implementation of Tikhonov regularisation using Singular Value Decomposition,
+    % with optimal lambda selected by cross validation.
+    % Example:
+    % Tik = Tikhonov        Create object
+    % Tik.precompute(J)     Precompute JJinv and noise matricies
+    % X = predict(dV)       Predict conducitivity values for given voltages
     
     properties (Access = public)
         n_lambda = 400
         lambda_range = [-15 -2]
-        lambdas
-        cv_error
+        lambdas                     %regularisation factor
+        cv_error                    %Cross validated error
+
     end
     
     properties (Access = private)
         
+        JJinv_CV_sets
         U
         S
         V
@@ -16,12 +24,10 @@ classdef tikhonov_object < handle
         JV
         n_prt
         n_mesh
-        JJinv_CV_sets
         SD_all
         IN
-        OUT
-        dV_predicted
-        
+        OUT 
+
     end
     
 
@@ -30,10 +36,10 @@ classdef tikhonov_object < handle
         function precompute(self,J)
             
             tic
-            
+            % Define lambda values
             self.lambdas = logspace(self.lambda_range(1),self.lambda_range(2),self.n_lambda);
             
-            
+            %Do SVD and precompute JV to prevent duplication later
             [self.n_prt, self.n_mesh] = size(J);
             [self.U,self.S,self.V] = svd(J,'econ');
             self.sv = diag(self.S);
@@ -58,13 +64,19 @@ classdef tikhonov_object < handle
             disp('Created sets for CV')
             
             %Compute J*Jinv for each value of lambda (speeds up recon
-            %later)
+            %later).
+            JJinv = zeros(self.n_prt,self.n_prt,self.n_lambda);
             for i = 1:self.n_lambda
                 sv_i = self.sv+self.lambdas(i)./self.sv;
                 JJinv(:,:,i) = self.JV*diag(1./sv_i)*self.U';
             end
             
             %Split JJinv according to training sets for cross validation
+            % Has dimensions of n_prt-1 * n_lambda * n_prt.
+            %This is the fastest indexing method, assuming that n_lambda >
+            %n_prt.
+            
+            JJinv_CV_sets = zeros(self.n_prt-1,self.n_prt,self.n_lambda);
             for i = 1:self.n_prt
                 self.JJinv_CV_sets(:,:,i) = JJinv(self.OUT(i),self.IN(:,i),:);
             end
@@ -81,23 +93,26 @@ classdef tikhonov_object < handle
                 self.SD_all(:,i) = std(self.V*(diag(1./sv_i)*UtNoise),0,2);
             end
             
-            disp(sprintf('Generated noise for all lambda values: %.1f',toc))
-            toc
+            disp(sprintf('Generated noise for all lambda values: %.1f seconds',toc))
+            
         end
         
-        function X = predict(self,dV)
+        function [X_corr, X] = predict(self,dV)
+            % returns Noise corrected conductivity values (X_corr) and
+            % optionally non corrected values (X)
             
+            %Number of sets of dV data
             n_samples = size(dV,2);
             
             %Initialise empty arrays for predicted voltages and cross valiation error
-            
             dV_predicted = zeros(self.n_lambda,self.n_prt);
             self.cv_error = zeros(self.n_prt,self.n_lambda);
             
             
-            % Predict 'leave one out' values of dV
+            % Calculate 'leave one out' values of dV using the values in
+            % the IN set.
             for i = 1:self.n_prt
-                self.dV_predicted(:,i) = dV(setdiff(self.OUT,i))'*self.JJinv_CV_sets(:,:,i);
+                dV_predicted(:,i) = dV(self.IN(:,i))'*self.JJinv_CV_sets(:,:,i);
             end
             
             % Calculate the CV error for each value of lambda and find the minimum
@@ -123,11 +138,7 @@ classdef tikhonov_object < handle
             
             
         end
-        
-        
-    
-    
-    
-    end
+                
+   end
 
 end
