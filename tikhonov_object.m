@@ -76,7 +76,7 @@ classdef tikhonov_object < handle
             %This is the fastest indexing method, assuming that n_lambda >
             %n_prt.
             
-            JJinv_CV_sets = zeros(self.n_prt-1,self.n_prt,self.n_lambda);
+            JJinv_CV_sets = zeros(self.n_prt-1,self.n_lambda,self.n_prt);
             for i = 1:self.n_prt
                 self.JJinv_CV_sets(:,:,i) = JJinv(self.OUT(i),self.IN(:,i),:);
             end
@@ -105,18 +105,23 @@ classdef tikhonov_object < handle
             n_samples = size(dV,2);
             
             %Initialise empty arrays for predicted voltages and cross valiation error
-            dV_predicted = zeros(self.n_lambda,self.n_prt);
-            self.cv_error = zeros(self.n_prt,self.n_lambda);
+            dV_predicted = zeros(n_samples,self.n_lambda,self.n_prt);
+            self.cv_error = zeros(self.n_lambda,n_samples);
             
             
             % Calculate 'leave one out' values of dV using the values in
             % the IN set.
             for i = 1:self.n_prt
-                dV_predicted(:,i) = dV(self.IN(:,i))'*self.JJinv_CV_sets(:,:,i);
+                dV_predicted(:,:,i) = dV(self.IN(:,i),:)'*self.JJinv_CV_sets(:,:,i);
             end
             
             % Calculate the CV error for each value of lambda and find the minimum
-            self.cv_error = sqrt(sum( (repmat(dV,[1,self.n_lambda])'-dV_predicted).^2,2) );
+            for i = 1:n_samples
+                dV_repeated = repmat(dV(:,i),[1,self.n_lambda])';
+                dV_predicted_squeeze = squeeze(dV_predicted(i,:,:));
+                self.cv_error(:,i) = sqrt(sum( (dV_repeated - dV_predicted_squeeze ).^2,2) );
+                
+            end
             [cv_min,opt] = min(self.cv_error);
             
             % initialize array X, of conducivity values
