@@ -11,10 +11,10 @@ classdef tikhonov_object < handle
         lambda_range = [-15 -2]
         lambdas                     %regularisation factor
         cv_error                    %Cross validated error
-
+        
     end
     
-    properties (Access = private)
+    properties (Hidden = true)
         
         JJinv_CV_sets
         U
@@ -26,11 +26,12 @@ classdef tikhonov_object < handle
         n_mesh
         SD_all
         IN
-        OUT 
-
+        OUT
+        verbose = 1 %If 1 print info messages
+        
     end
     
-
+    
     
     methods
         function precompute(self,J)
@@ -45,14 +46,15 @@ classdef tikhonov_object < handle
             self.sv = diag(self.S);
             self.JV = J*self.V;
             
-            disp(sprintf('SVD done: %.1f seconds.',toc))
-            
+            if self.verbose
+                disp(sprintf('SVD done: %.1f seconds.',toc))
+            end
             
             tic
             
             %Generate noise array for correction
             Noise = 1e-6*randn(500,nnz(1:self.n_prt));
-            disp('Generated Noise')
+            
             
             % Create sets for leave one out cross validation
             self.OUT = (1:self.n_prt)';
@@ -61,7 +63,6 @@ classdef tikhonov_object < handle
                 % choose the remaining indices
                 self.IN(:,i) = setdiff(self.OUT,self.OUT(i));
             end
-            disp('Created sets for CV')
             
             %Compute J*Jinv for each value of lambda (speeds up recon
             %later).
@@ -81,7 +82,9 @@ classdef tikhonov_object < handle
                 self.JJinv_CV_sets(:,:,i) = JJinv(self.OUT(i),self.IN(:,i),:);
             end
             
-            disp(sprintf('Created Psuedoinverse of J for all values of nfold: %.1f seconds',toc))
+            if self.verbose
+                disp(sprintf('Created Psuedoinverse of J for all values of nfold: %.1f seconds',toc))
+            end
             
             % Create noise correction for all values of lambda, another big time saver
             tic
@@ -93,8 +96,9 @@ classdef tikhonov_object < handle
                 self.SD_all(:,i) = std(self.V*(diag(1./sv_i)*UtNoise),0,2);
             end
             
-            disp(sprintf('Generated noise for all lambda values: %.1f seconds',toc))
-            
+            if self.verbose
+                disp(sprintf('Generated noise for all lambda values: %.1f seconds',toc))
+            end
         end
         
         function [X_corr, X] = predict(self,dV)
@@ -143,7 +147,7 @@ classdef tikhonov_object < handle
             
             
         end
-                
-   end
-
+        
+    end
+    
 end
