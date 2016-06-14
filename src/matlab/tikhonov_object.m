@@ -112,7 +112,6 @@ classdef tikhonov_object < handle
             dV_predicted = zeros(n_samples,self.n_lambda,self.n_prt);
             self.cv_error = zeros(self.n_lambda,n_samples);
             
-            
             % Calculate 'leave one out' values of dV using the values in
             % the IN set.
             for i = 1:self.n_prt
