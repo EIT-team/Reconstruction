@@ -1,0 +1,29 @@
+#Negative Range
+
+from vtk import vtkThreshold
+
+input = self.GetInputDataObject(0, 0)
+output = self.GetOutputDataObject(0)
+
+#Get min/max values
+aa = inputs[0].CellData
+ai = aa[0]
+Range = ai.GetRange(0)
+
+#Define threshold filter
+thresh = vtkThreshold()
+
+thresh.SetInputData(input)
+
+minthres= -10
+maxval = -500
+
+current_min_thres = min(Range[0]/2,minthres)
+
+#Set threshold to half min
+thresh.ThresholdBetween(Range[0],current_min_thres)
+thresh.Update()
+
+output.ShallowCopy(thresh.GetOutput())
+
+print "current thres : " + str(current_thres)
