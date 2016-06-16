@@ -17,13 +17,14 @@ thresh.SetInputData(input)
 
 minthres= -10
 maxval = -500
+#maxval = Range[0]
 
-current_min_thres = min(Range[0]/2,minthres)
+current_min_thres = min(Range[0]*(1- 0.5),minthres)
 
 #Set threshold to half min
-thresh.ThresholdBetween(Range[0],current_min_thres)
+thresh.ThresholdBetween(maxval,current_min_thres)
 thresh.Update()
 
 output.ShallowCopy(thresh.GetOutput())
 
-print "current thres : " + str(current_thres)
+print "current thres : " + str(current_min_thres)

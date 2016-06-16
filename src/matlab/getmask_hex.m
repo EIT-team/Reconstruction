@@ -15,20 +15,20 @@ MaskCount=0;
 %%
 
 for iHex=1:nHex
-curTetraMatRef=Matref(Mesh_hex.cells{iHex}); %Mat ref of the tetra which made this hex
-
-curTetraNum=length(curTetraMatRef); %number of tetra for this hex
-
-SelectTetra=length(find(curTetraMatRef == SelectMatRef)); %idx of tetra with matref meeting criteria
-
-if SelectTetra > round(curTetraNum*ThresholdRatio) % if the number of tetrawith matref is greater than the thresholdratio 
-    MaskCount=MaskCount+1; %increment the number of hex found
+    curTetraMatRef=Matref(Mesh_hex.cells{iHex}); %Mat ref of the tetra which made this hex
     
-    Mask_hex(MaskCount)=iHex; %store idx
+    curTetraNum=length(curTetraMatRef); %number of tetra for this hex
     
-
-end
-
+    SelectTetra=length(find(curTetraMatRef == SelectMatRef)); %idx of tetra with matref meeting criteria
+    
+    if SelectTetra > round(curTetraNum*ThresholdRatio) % if the number of tetrawith matref is greater than the thresholdratio
+        MaskCount=MaskCount+1; %increment the number of hex found
+        
+        Mask_hex(MaskCount)=iHex; %store idx
+        
+        
+    end
+    
 end
 %%
 Mask_hex(isnan(Mask_hex))=[];
