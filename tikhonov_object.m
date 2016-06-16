@@ -47,7 +47,7 @@ classdef tikhonov_object < handle
             self.JV = J*self.V;
             
             if self.verbose
-                disp(sprintf('SVD done: %.1f seconds.',toc))
+                fprintf('SVD done: %.1f seconds.\n',toc)
             end
             
             tic
@@ -77,13 +77,13 @@ classdef tikhonov_object < handle
             %This is the fastest indexing method, assuming that n_lambda >
             %n_prt.
             
-            JJinv_CV_sets = zeros(self.n_prt-1,self.n_lambda,self.n_prt);
+            self.JJinv_CV_sets = zeros(self.n_prt-1,self.n_lambda,self.n_prt);
             for i = 1:self.n_prt
                 self.JJinv_CV_sets(:,:,i) = JJinv(self.OUT(i),self.IN(:,i),:);
             end
             
             if self.verbose
-                disp(sprintf('Created Psuedoinverse of J for all values of nfold: %.1f seconds',toc))
+                fprintf('Created Psuedoinverse of J for all values of nfold: %.1f seconds\n',toc)
             end
             
             % Create noise correction for all values of lambda, another big time saver
@@ -97,7 +97,7 @@ classdef tikhonov_object < handle
             end
             
             if self.verbose
-                disp(sprintf('Generated noise for all lambda values: %.1f seconds',toc))
+                fprintf('Generated noise for all lambda values: %.1f seconds\n',toc)
             end
         end
         
@@ -126,7 +126,7 @@ classdef tikhonov_object < handle
                 self.cv_error(:,i) = sqrt(sum( (dV_repeated - dV_predicted_squeeze ).^2,2) );
                 
             end
-            [cv_min,opt] = min(self.cv_error);
+            [~,opt] = min(self.cv_error);
             
             % initialize array X, of conducivity values
             X = zeros(self.n_mesh,n_samples);
@@ -140,7 +140,6 @@ classdef tikhonov_object < handle
                 X(:,i) = self.V*(diag(1./sv_i)*UY(:,i));
                 
             end
-            
             %Apply noise correction using optimal lambda
             [~,opt] = min(self.cv_error);
             X_corr = X./self.SD_all(:,opt);
