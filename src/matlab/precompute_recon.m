@@ -1,3 +1,5 @@
+
+
 % precompute_Recon : Precomputes Jinv (using SVD) and noise matrices for all
 % values of lambda, to speed up reconstruction, plus a few other performance
 % tweaks to speed up processing (About 40x faster than previous method)
@@ -61,6 +63,8 @@ end
 
 %Split JJinv according to training sets for cross validation
 % This is a big time saving step, at the expense of increased memory usage
+JJinv_CV_sets = zeros(n_prt-1,n_lambda,n_prt);
+
 for i = 1:n_prt
     JJinv_CV_sets(:,:,i) = JJinv(OUT(i),IN(:,i),:);
 end
@@ -85,3 +89,5 @@ toc
 
 clear S Noise JJinv IN OUT JV
 
+%% Example of tikhonov_CV_fast usage
+%
