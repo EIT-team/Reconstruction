@@ -1,5 +1,4 @@
 % Unit tests for Tikhonov 
-addpath('../src/matlab')
 %% Test setup
 Tik = tikhonov_object;
 Tik.verbose = 0;
