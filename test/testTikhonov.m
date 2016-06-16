@@ -1,4 +1,5 @@
 % Unit tests for Tikhonov 
+
 %% Test setup
 Tik = tikhonov_object;
 Tik.verbose = 0;
@@ -19,11 +20,14 @@ dV_zeros = zeros(100,1);
 
 fprintf('Testing inverse of single dV')
 [~,T] = Tik.predict(dV_single);
-expected = 1e-3./(1:100)'; % 1/x
+expected = 100e-3./(1:100)'; % 1/x
 
 % Test the inverse solution
+try
 assert( max(abs(T-expected)) < tol,'Error with inverse')
-    
+catch 'Error with inverse'
+    exit(1)
+end
 fprintf('.')
 % Use caluclated inverse to recompute forward solution
 assert (isequal(expected'*J_test,dV_single'),'Error with forward')
