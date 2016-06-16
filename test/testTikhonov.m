@@ -1,5 +1,5 @@
 % Unit tests for Tikhonov 
-addpath('../src/');
+addpath('../src')
 %% Test setup
 Tik = tikhonov_object;
 Tik.verbose = 0;
