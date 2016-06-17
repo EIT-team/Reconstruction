@@ -15,58 +15,75 @@ dV_single = 1e-3*ones(100,1);
 dV_multiple = 1e-3*ones(100,50);
 dV_zeros = zeros(100,1);
 
+Failed = 0;
 %% Run tests
 
 
-fprintf('Testing inverse of single dV')
+disp('Testing inverse of single dV')
 [~,T] = Tik.predict(dV_single);
 expected = 1e-3./(1:100)'; % 1/x
 
 % Test the inverse solution
 try
-assert( max(abs(T-expected)) < tol,'Error with inverse')
-catch 'Error with inverse'
-    exit(1)
+assert( max(abs(T-expected)) < tol)
+catch
+    disp('Error with inverse')
+    Failed = 1;
 end
 
-fprintf('.')
 % Use caluclated inverse to recompute forward solution
 try
-assert (isequal(expected'*J_test,dV_single'),'Error with forward')
-catch 'Error with forward'
-    exit(1)
+assert (isequal(expected'*J_test,dV_single'))
+catch
+    disp('Error with forward')
+    Failed = 1;
+    
 end
 
-fprintf('.\n')
 
 
-fprintf('Testing inverse of multple dVs')
+disp('Testing inverse of multple dVs')
 [~,T] = Tik.predict(dV_multiple);
 expected = repmat(expected,1,50);
-assert( max(abs(T(:)-expected(:))) < tol,'Error with inverse')
-fprintf('.')
+
+try
+assert( max(abs(T(:)-expected(:))) < tol)
+catch
+        disp('Error with inverse')
+    Failed = 1;
+end
+
 % Use caluclated inverse to recompute forward solution
 try
-assert (isequal(expected'*J_test,dV_multiple'),'Error with forward')
-catch 'Error with forward'
-    exit(1)
+assert (isequal(expected'*J_test,dV_multiple'))
+catch
+    disp('Error with forward')
+    Failed = 1;
 end
-fprintf('.\n')
 
 
-fprintf('Testing inverse of zero-valued dV')
+disp('Testing inverse of zero-valued dV')
 [~,T] = Tik.predict(dV_zeros);
 expected = dV_zeros;
-assert( isequal(T,expected),'Error with inverse')
-fprintf('.')
+try
+assert( isequal(T,expected))
+catch
+        disp('Error with inverse')
+    Failed = 1;
+end
+
 % Use caluclated inverse to recompute forward solution
 try
-assert (isequal(expected'*J_test,dV_zeros'),'Error with forward')
-catch 'Error with forward'
-    exit(1)
+assert (isequal(expected'*J_test,dV_zeros'))
+catch
+    disp('Error with forward')
+    Failed = 1;
 end
-fprintf('.\n')
 
 %% Clear variables
 
 clear Tik tol J_test dV_test
+
+if Failed
+disp('Failed')
+end
