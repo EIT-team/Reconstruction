@@ -5,7 +5,7 @@ Failed = 0;
 
 load('../resources/mesh/Ex_Cyl_Small.mat'); %load the Mesh and the Jacobian (from fwd solver), and the boundary votlages DV
 load('reconTestData.mat');
-[h]=DisplayBoundaries(Mesh);
+%[h]=DisplayBoundaries(Mesh);
 
 
 
