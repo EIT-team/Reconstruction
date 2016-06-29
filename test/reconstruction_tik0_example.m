@@ -5,8 +5,9 @@ Failed = 0;
 
 load('../resources/mesh/Ex_Cyl_Small.mat'); %load the Mesh and the Jacobian (from fwd solver), and the boundary votlages DV
 load('reconTestData.mat');
-%[h]=DisplayBoundaries(Mesh);
+[h]=DisplayBoundaries(Mesh);
 
+tol = 1e-14;
 
 
 %create hex mesh and hex jacobian - 10mm elements
@@ -29,7 +30,7 @@ disp(sprintf('X done: %.2f min.',toc/60));
 
 % Check we get right value of X
 try
-    assert(isequal(X,X_test))
+assert( max(abs(X-X_test)) < tol)
 catch
     disp('Recon test error')
     Failed = 1;
