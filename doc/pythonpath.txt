@@ -1,0 +1,4 @@
+%PYTHONPATH%;C:\Program Files\ParaView 5.0.0\bin;C:\Program Files\ParaView 5.0.0\Lib;C:\Program Files\ParaView 5.0.0\Lib\site-packages
+
+
+
