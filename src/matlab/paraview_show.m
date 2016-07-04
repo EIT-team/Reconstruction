@@ -1,4 +1,4 @@
-function [ status ] = paraview_show( MeshHex,MeshNodes,Data,SavePath)
+function [ status ] = paraview_show( MeshHex,MeshNodes,Data,SavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title)
 %PARAVIEW_SHOW Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -36,7 +36,7 @@ else
     if ~javaFileObj.isAbsolute()
         SavePath = fullfile(pwd,SavePath);
     end
-
+    
     [Save_root,Save_name] = fileparts(SavePath);
     script_path = fullfile(Save_root,[Save_name '.py']);
     vtk_path = fullfile(Save_root,[Save_name '.vtk']);
@@ -54,27 +54,34 @@ vtk_path_python = strrep(vtk_path,'\','/');
 
 %check if passed or calculate
 
-% This is how the data is refered to in paraview
-Cmap_name = 'Data';
 %This is the colorbar legend, separate so we can have longer text
-Cmap_title = 'Legend FTW';
+
+if exist('Cmap_title','var') == 0
+    Cmap_title = 'Legend FTW';
+end
 
 %sets the range of the colormap
-
-% Find max of dataset rounded up
-MaxinData = ceil(max(max(abs(Data)))); 
-Cmap = [-MaxinData, MaxinData];
+if exist('Cmap','var') == 0
+    % Find max of dataset rounded up
+    MaxinData = ceil(max(max(abs(Data))));
+    Cmap = [-MaxinData, MaxinData];
+end
 
 % Default threshold is FWHM in each direction
+if exist('Thr_Neg','var') == 0
+    MaxNeg = (min(min((Data(Data < 0)))));
+    Thr_Neg =[MaxNeg, MaxNeg/2];
+end
 
-%find the biggest change of negative and positive directions
-MaxPos = (max(max((Data(Data > 0))))); 
-MaxNeg = (min(min((Data(Data < 0))))); 
+if exist('Thr_Pos','var') == 0
+    %find the biggest change of negative and positive directions
+    MaxPos = (max(max((Data(Data > 0)))));
+    Thr_Pos =[MaxPos/2, MaxPos];
+end
 
-%set FWHM thresholds - SET BOTH TO ZERO TO DISABLE
-Thr_Neg =[MaxNeg, MaxNeg/2];
-Thr_Pos =[MaxPos/2, MaxPos];
 
+% This is how the data is refered to in paraview
+Cmap_name = 'Data';
 %background opacity
 Bkg_Op = 0.1;
 
