@@ -93,7 +93,8 @@ classdef tikhonov_object < handle
             self.SD_all = zeros(self.n_mesh,self.n_lambda);
             for i = 1:self.n_lambda
                 sv_i = self.sv+self.lambdas(i)./self.sv;
-                self.SD_all(:,i) = std(self.V*(diag(1./sv_i)*UtNoise),0,2);
+                A = self.V*(diag(1./sv_i)*UtNoise);
+                self.SD_all(:,i) = std(A,0,2);
             end
             
             if self.verbose
