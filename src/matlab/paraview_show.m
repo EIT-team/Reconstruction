@@ -15,7 +15,7 @@ temp_vtk_name = 'test.vtk';
 temp_script_name = 'test.py';
 
 
-if exist('SavePath','var') == 0
+if exist('SavePath','var') == 0 || isempty(SavePath)
     
     %if none given use temp directory in recon repo -  this is set to be
     %ignored by temp. so we good
@@ -56,27 +56,49 @@ vtk_path_python = strrep(vtk_path,'\','/');
 
 %This is the colorbar legend, separate so we can have longer text
 
-if exist('Cmap_title','var') == 0
-    Cmap_title = 'Legend FTW';
+if exist('Cmap_title','var') == 0 || isempty(Cmap_title)
+    Cmap_title = 'SigmaProbably';
 end
+
+% Find max of dataset rounded up
+MaxinData = ceil(max(max(abs(Data))));
 
 %sets the range of the colormap
-if exist('Cmap','var') == 0
-    % Find max of dataset rounded up
-    MaxinData = ceil(max(max(abs(Data))));
+if exist('Cmap','var') == 0 || isempty(Cmap)
+    %if not given then take default which is centred at 0
     Cmap = [-MaxinData, MaxinData];
+else %if 2 given then use these explicity
+    if length(Cmap) == 1
+        %if only 1 given, then duplicate this for both min and max changes
+        Cmap = [-abs(Cmap) abs(Cmap)];
+    end
 end
 
+
+% Find max of dataset rounded up
+MaxNeg = (min(min((Data(Data < 0)))));
 % Default threshold is FWHM in each direction
-if exist('Thr_Neg','var') == 0
-    MaxNeg = (min(min((Data(Data < 0)))));
+if exist('Thr_Neg','var') == 0 || isempty(Thr_Neg)
+    %if not given then do defaults
     Thr_Neg =[MaxNeg, MaxNeg/2];
+else % if 2 given then use these explicit values
+    if length(Thr_Neg) == 1
+        %only 1 given then take this as a coefficient - i.e. 0.5 is full
+        %width half max. 0.3 is full width third max etc.
+        Thr_Neg = (1-abs(Thr_Neg))*MaxNeg*[-1 1];
+    end
 end
 
-if exist('Thr_Pos','var') == 0
-    %find the biggest change of negative and positive directions
-    MaxPos = (max(max((Data(Data > 0)))));
+%find the biggest change of negative and positive directions
+MaxPos = (max(max((Data(Data > 0)))));
+if exist('Thr_Pos','var') == 0 || isempty(Thr_Pos)
     Thr_Pos =[MaxPos/2, MaxPos];
+else % if 2 given then use these explicit values
+    if length(Thr_Pos) == 1
+        %only 1 given then take this as a coefficient - i.e. 0.5 is full
+        %width half max. 0.3 is full width third max etc.
+        Thr_Pos = (1-abs(Thr_Pos))*MaxPos*[-1 1];
+    end
 end
 
 
