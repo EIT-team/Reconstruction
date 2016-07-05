@@ -108,4 +108,4 @@ renderView1.CameraViewUp = [0.24377672090518004, -0.19325461544460407, 0.9503817
 renderView1.CameraParallelScale = 97.0865603405332
 
 # save animation images/movie
-WriteAnimation('E:/Neonate2016/Parallel/Recon/arm_new/output/loveyou.png', Magnification=1, FrameRate=5.0, Compression=True)
+WriteAnimation('E:/tst.png', Magnification=1, FrameRate=5.0, Compression=True)

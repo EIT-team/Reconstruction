@@ -1,10 +1,11 @@
-function [ status ] = paraview_show( MeshHex,MeshNodes,Data,SavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title)
+function [ status ] = paraview_show( MeshHex,MeshNodes,Data,SavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,Camera)
 %PARAVIEW_SHOW Summary of this function goes here
 %   Detailed explanation goes here
 
 %% Check inputs
 
 %check if mesh and data match etc.
+
 
 
 %% Check where we are saving the data to
@@ -50,7 +51,7 @@ vtk_path_python = strrep(vtk_path,'\','/');
 
 
 
-%% Get variables to write
+%% Get scale and threshold variables
 
 %check if passed or calculate
 
@@ -101,11 +102,40 @@ else % if 2 given then use these explicit values
     end
 end
 
+% SOME DEFAULTS THAT I DOUBT PEOPLE WILL WANT TO ALTER
 
 % This is how the data is refered to in paraview
 Cmap_name = 'Data';
 %background opacity
 Bkg_Op = 0.1;
+
+%% Get Camera Setting
+
+
+legit_camera ={'x','y','z'};
+legit_camera = [strcat('-',legit_camera) legit_camera strcat('+',legit_camera)];
+
+%do camera flag - dont write the command if we dont want it
+DoCamera = 1;
+
+if exist('Camera','var') == 0 || isempty(Camera)
+    DoCamera =0;
+else
+    %check if input is legit
+    Camera=lower(Camera);
+    if ismember(Camera, legit_camera)
+        %added this as I forgot the correct format after 10 minutes of
+        %writing this
+        if strcmp(Camera(1),'+')
+            Camera(1)=[];
+        end
+    else
+        fprintf(2,'Didnt understand camera direction. Ignoring'\n');
+        DoCamera =0;
+    end
+
+
+end
 
 
 %% Write the VTK file
@@ -139,7 +169,12 @@ fprintf(fid,'VTK_Filenames = os.path.abspath(''%s'') \n', vtk_path_python);
 fprintf(fid,'Data = LegacyVTKReader(FileNames=[VTK_Filenames])\n');
 
 %showdata
-fprintf(fid,'ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)');
+fprintf(fid,'ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)\n');
+
+%change camera if we want to
+if DoCamera
+    fprintf(fid,'ShowData.SetCamera(Data, ''%s'')',Camera);
+end
 
 fclose(fid);
 

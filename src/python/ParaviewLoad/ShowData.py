@@ -1,7 +1,9 @@
 
 from paraview.simple import *
 
-def ShowThresholdData(Data,ColourMapRange,NegativeThresholdValues,PositiveThresholdValues,ColourMapName,ColourMapLegend,BackgroundOpacityValue):
+
+def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThresholdValues, ColourMapName,ColourMapLegend,BackgroundOpacityValue):
+
     #### disable automatic camera reset on 'Show'
     paraview.simple._DisableFirstRenderCameraReset()
     #check if we should do negative or positive thresholds
@@ -107,3 +109,85 @@ def ShowThresholdData(Data,ColourMapRange,NegativeThresholdValues,PositiveThresh
     renderView1.ResetCamera()
 
     Render()
+
+
+def SetCamera(Data, DirectionString):
+    # This code is heavily influenced by (stolen from) http://comments.gmane.org/gmane.comp.science.paraview.user/15091
+
+    LegitStrings = ['x', 'y', 'z']
+    camDirection = 1
+
+    DirectionString = DirectionString.lower()
+
+    if DirectionString.startswith('-'):
+        camDirection = -1
+        DirectionString = DirectionString[1]
+        print "negative direction"
+
+    if DirectionString in LegitStrings:
+        dimMode = LegitStrings.index(DirectionString)
+    else:
+        print "DONT UNDERSTAND INPUT"
+        return
+
+    bounds = Data.GetDataInformation().GetBounds()
+
+    bounds_dx = bounds[1] - bounds[0]
+    bounds_dy = bounds[3] - bounds[2]
+    bounds_dz = bounds[5] - bounds[4]
+    bounds_cx = (bounds[0] + bounds[1]) / 2.0
+    bounds_cy = (bounds[2] + bounds[3]) / 2.0
+    bounds_cz = (bounds[4] + bounds[5]) / 2.0
+
+
+    #weird things were happening when the camera was still inside the mesh
+
+
+    if dimMode == 2:
+        # xy Z equivalent
+        camUp = [0.0, 1.0, 0.0]
+        #pos = max(bounds_dx, bounds_dy)
+        pos = bounds_cz + camDirection * bounds_dz
+        camPos = [bounds_cx, bounds_cy, pos]
+        camFoc = [bounds_cx, bounds_cy, bounds_cz]
+
+    elif dimMode == 1:
+        # xz Y equivalent
+        camUp = [0.0, 0.0, 1.0]
+        # pos = 2* max(bounds_dx, bounds_dz) #make it twice as far away to ensure we are
+        pos = bounds_cy + camDirection * bounds_dy
+        camPos = [bounds_cx, pos, bounds_cz]
+        camFoc = [bounds_cx, bounds_cy, bounds_cz]
+
+    elif dimMode == 0:
+        # yz - X equivalent
+        camUp = [0.0, 0.0, 1.0]
+        #pos = max(bounds_dy, bounds_dz)
+        pos = bounds_cx + camDirection * bounds_dx
+        camPos = [pos, bounds_cy, bounds_cz] # changed to match the GUI buttons
+        camFoc = [bounds_cx, bounds_cy, bounds_cz]
+
+    else:
+        print "What?"
+
+    # configure the view
+    # width = 1024
+    # height = int(width*aspect)
+    print "Position set! : " + str(camPos)
+
+    view = GetRenderView()
+    view.CameraViewUp = camUp
+    view.CameraPosition = camPos
+    view.CameraFocalPoint = camFoc
+    # view.UseOffscreenRenderingForScreenshots = 0
+    # view.CenterAxesVisibility = 0
+    # view.OrientationAxesVisibility = 0
+    # view.ViewSize = [width, height]
+    Render()
+    view.ResetCamera()
+    ResetCamera()
+    # for fine tuning
+    config_camZoom = 1.0
+    cam = GetActiveCamera()
+    cam.Zoom(config_camZoom)
+    print "Position after camera reset : " + str(camPos)
