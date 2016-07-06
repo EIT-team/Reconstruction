@@ -1,4 +1,4 @@
-function [ status ] = paraview_show( MeshHex,MeshNodes,Data,SavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,Camera)
+function [ status ] = paraview_show( MeshHex,MeshNodes,Data,SavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr)
 %PARAVIEW_SHOW Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -18,6 +18,7 @@ temp_script_name = 'test.py';
 
 if exist('SavePath','var') == 0 || isempty(SavePath)
     
+    fprintf('Saving vtkdata in temp directory\n');
     %if none given use temp directory in recon repo -  this is set to be
     %ignored by temp. so we good
     script_path= [temp_dir filesep temp_script_name];
@@ -41,6 +42,7 @@ else
     [Save_root,Save_name] = fileparts(SavePath);
     script_path = fullfile(Save_root,[Save_name '.py']);
     vtk_path = fullfile(Save_root,[Save_name '.vtk']);
+    fprintf('Saving vtkdata in: %s\n',vtk_path);
     
 end
 
@@ -86,7 +88,7 @@ else % if 2 given then use these explicit values
     if length(Thr_Neg) == 1
         %only 1 given then take this as a coefficient - i.e. 0.5 is full
         %width half max. 0.3 is full width third max etc.
-        Thr_Neg = (1-abs(Thr_Neg))*MaxNeg*[-1 1];
+        Thr_Neg = [MaxNeg, (1-abs(Thr_Neg))*MaxNeg];
     end
 end
 
@@ -98,7 +100,7 @@ else % if 2 given then use these explicit values
     if length(Thr_Pos) == 1
         %only 1 given then take this as a coefficient - i.e. 0.5 is full
         %width half max. 0.3 is full width third max etc.
-        Thr_Pos = (1-abs(Thr_Pos))*MaxPos*[-1 1];
+        Thr_Pos = [(1-abs(Thr_Pos))*MaxPos, MaxPos];
     end
 end
 
@@ -111,31 +113,46 @@ Bkg_Op = 0.1;
 
 %% Get Camera Setting
 
-
 legit_camera ={'x','y','z'};
 legit_camera = [strcat('-',legit_camera) legit_camera strcat('+',legit_camera)];
 
 %do camera flag - dont write the command if we dont want it
 DoCamera = 1;
 
-if exist('Camera','var') == 0 || isempty(Camera)
+if exist('Camera','var') == 0 || isempty(CameraStr)
     DoCamera =0;
 else
     %check if input is legit
-    Camera=lower(Camera);
-    if ismember(Camera, legit_camera)
+    CameraStr=lower(CameraStr);
+    if ismember(CameraStr, legit_camera)
         %added this as I forgot the correct format after 10 minutes of
         %writing this
-        if strcmp(Camera(1),'+')
-            Camera(1)=[];
+        if strcmp(CameraStr(1),'+')
+            CameraStr(1)=[];
         end
     else
         fprintf(2,'Didnt understand camera direction. Ignoring'\n');
         DoCamera =0;
     end
 
-
 end
+
+%% Display Text
+%output to user
+fprintf('Values used: Cmap=[%d,%d] ', Cmap(1),Cmap(2));
+
+if any(Thr_Neg)
+    fprintf('Thr_Neg=[%.2f,%.2f] ', Thr_Neg(1),Thr_Neg(2));
+end
+if any(Thr_Pos)
+    fprintf('Thr_Pos=[%.2f, %.2f] ', Thr_Pos(1),Thr_Pos(2));
+end
+if DoCamera
+    fprintf('\nSetting Camera with %s',CameraStr);
+end
+
+fprintf('\n');
+
 
 
 %% Write the VTK file
@@ -158,8 +175,8 @@ fprintf(fid,'from ParaviewLoad import ShowData\n');
 fprintf(fid,'Cmap_name = ''%s'' \n', Cmap_name);
 fprintf(fid,'Cmap_title = ''%s'' \n', Cmap_title);
 fprintf(fid,'Cmap = [%d, %d]\n', Cmap(1),Cmap(2));
-fprintf(fid,'Thr_Neg = [%d, %d]\n', Thr_Neg(1),Thr_Neg(2));
-fprintf(fid,'Thr_Pos = [%d, %d]\n', Thr_Pos(1),Thr_Pos(2));
+fprintf(fid,'Thr_Neg = [%.2f, %.2f]\n', Thr_Neg(1),Thr_Neg(2));
+fprintf(fid,'Thr_Pos = [%.2f, %.2f]\n', Thr_Pos(1),Thr_Pos(2));
 fprintf(fid,'Bkg_Op = %.1f \n', Bkg_Op);
 
 %filenames
@@ -173,7 +190,7 @@ fprintf(fid,'ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name,
 
 %change camera if we want to
 if DoCamera
-    fprintf(fid,'ShowData.SetCamera(Data, ''%s'')',Camera);
+    fprintf(fid,'ShowData.SetCamera(Data, ''%s'')',CameraStr);
 end
 
 fclose(fid);
