@@ -19,10 +19,6 @@ VTK_Filenames = 'E:\\Neonate2016\\Parallel\\Recon\\arm_new\\output\\p_seq9_1_22.
 
 Data = LegacyVTKReader(FileNames=[VTK_Filenames])
 
-
-
-
 ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)
-
 
 ShowData.SetCamera(Data, 'z')

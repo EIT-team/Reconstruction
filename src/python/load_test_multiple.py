@@ -1,8 +1,8 @@
 #### import the simple module from the paraview
 
 import os
-#from paraview.simple import *
-#from ParaviewLoad import ShowData
+from paraview.simple import *
+from ParaviewLoad import ShowData
 
 Cmap_name = 'u'
 Cmap_title = 'The stuff'
@@ -20,10 +20,25 @@ VTK_Filenames=VTKnames
 for iName in range(len(VTKnames)):
     #print iName
     VTK_Filenames[iName]=os.path.abspath(VTKnames[iName])
-
 print VTK_Filenames
 
 
-#Data = LegacyVTKReader(FileNames=[VTK_Filenames])
+Data = LegacyVTKReader(FileNames=VTK_Filenames)
 
-#ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)
+
+ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)
+
+
+
+# ##  get active view
+#renderView1 = GetActiveViewOrCreate('RenderView')
+# DataDisplay = Show(Data, renderView1)
+# # get animation scene
+animationScene1 = GetAnimationScene()
+#
+# # update animation scene based on data timesteps
+animationScene1.UpdateAnimationUsingDataTimeSteps()
+#
+#renderView1.ResetCamera()
+#
+#Render()

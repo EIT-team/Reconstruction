@@ -1,4 +1,4 @@
-
+import os
 from paraview.simple import *
 
 
@@ -191,3 +191,13 @@ def SetCamera(Data, DirectionString):
     cam = GetActiveCamera()
     cam.Zoom(config_camZoom)
     print "Position after camera reset : " + str(camPos)
+
+
+def ConvertFilenames(Filenames_input):
+    VTK_Filenames = Filenames_input
+    for iName in range(len(Filenames_input)):
+        # print iName
+        VTK_Filenames[iName] = os.path.abspath(Filenames_input[iName])
+    print VTK_Filenames
+
+    return VTK_Filenames

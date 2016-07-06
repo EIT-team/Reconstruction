@@ -52,7 +52,6 @@ script_path_python = strrep(script_path,'\','/');
 vtk_path_python = strrep(vtk_path,'\','/');
 
 
-
 %% Get scale and threshold variables
 
 %check if passed or calculate
