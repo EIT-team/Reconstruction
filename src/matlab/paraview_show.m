@@ -6,6 +6,15 @@ function [ status ] = paraview_show( MeshHex,MeshNodes,Data,SavePath,Thr_Neg,Thr
 
 %check if mesh and data match etc.
 
+if size(MeshHex,1) ~= size(Data,1)
+    error('Size of data and hexes dont match');
+end
+
+
+TimeSteps = size(Data,2);
+
+
+
 
 
 %% Check where we are saving the data to
@@ -179,7 +188,9 @@ fprintf(fid,'Thr_Pos = [%.2f, %.2f]\n', Thr_Pos(1),Thr_Pos(2));
 fprintf(fid,'Bkg_Op = %.1f \n', Bkg_Op);
 
 %filenames
-fprintf(fid,'VTK_Filenames = os.path.abspath(''%s'') \n', vtk_path_python);
+fprintf(fid,'VTKnamesIn = ''%s'' \n', vtk_path_python);
+fprintf(fid,'VTK_Filenames = ShowData.ConvertFilenames(VTKnamesIn) \n');
+
 
 %load the data
 fprintf(fid,'Data = LegacyVTKReader(FileNames=[VTK_Filenames])\n');

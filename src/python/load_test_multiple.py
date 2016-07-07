@@ -11,17 +11,12 @@ Cmap = [-100, 100]
 Thr_Neg = [-100, -50]
 Thr_Pos = [25, 40]
 Bkg_Op = 0.1
-#VTK_Filenames = 'E:\\Neonate2016\\Parallel\\Recon\\arm_new\\output\\p_seq9_1_22.vtk'
-# VTK_Filenames = 'C:\\Users\\James\\Neonate2016\\Parallel\\Recon\\arm\\output\\plastic_seq4_1_53.vtk'
 
-VTKnames=['E:/Neonate2016/Parallel/Recon/arm_new/output/p_seq9_1_22.vtk', 'E:/Neonate2016/Parallel/Recon/arm_new/output/p_seq9_1_23.vtk']
-VTK_Filenames=VTKnames
+VTKnames=['C:/Users/James/Neonate2016/Parallel/Recon/arm/output/plastic_seq4_1_53.vtk','C:/Users/James/Neonate2016/Parallel/Recon/arm/output/plastic_seq4_1_54.vtk']
+#VTKnames=['E:/Neonate2016/Parallel/Recon/arm_new/output/p_seq9_1_22.vtk', 'E:/Neonate2016/Parallel/Recon/arm_new/output/p_seq9_1_23.vtk']
 
-for iName in range(len(VTKnames)):
-    #print iName
-    VTK_Filenames[iName]=os.path.abspath(VTKnames[iName])
-print VTK_Filenames
 
+VTK_Filenames=ShowData.ConvertFilenames(VTKnames)
 
 Data = LegacyVTKReader(FileNames=VTK_Filenames)
 
@@ -42,3 +37,9 @@ animationScene1.UpdateAnimationUsingDataTimeSteps()
 #renderView1.ResetCamera()
 #
 #Render()
+# save animation images/movie
+
+ImageFilename=ShowData.ConvertFilenames('C:/Users/James/test.png')
+
+
+WriteAnimation(ImageFilename, Magnification=1, FrameRate=5.0, Compression=True)

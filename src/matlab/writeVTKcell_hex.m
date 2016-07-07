@@ -1,8 +1,22 @@
-function writeVTKcell_hex(filename,t,p,u,DataName)
+function writeVTKcell_hex(filename,Hexes,Nodes,Data,DataName)
 % vtk export for Hex elements
 
-[np,dim]=size(p);
-[nt]=size(t,1);
+if size(Hexes,1) ~= size(Data,1)
+    error('Size of data and hexes dont match');
+end
+
+if size(Hexes,2) ~= 8
+    error('Hexes not correct, should be H x 8');
+end
+
+if size(Nodes,2) ~= 3
+    error('Nodes not correct, should be N x 3');
+end
+
+
+
+[np,dim]=size(Nodes);
+[nt]=size(Hexes,1);
 
 if exist('DataName','var') ==0
     DataName = 'Data';
@@ -19,7 +33,7 @@ fprintf(FID,'DATASET UNSTRUCTURED_GRID\n');
 
 fprintf(FID,'POINTS %d float\n',np);
 s='%f %f %f \n';
-P=[p zeros(np,3-dim)];
+P=[Nodes zeros(np,3-dim)];
 fprintf(FID,s,P');
 
 fprintf(FID,'CELLS %d %d\n',nt,nt*9);
@@ -28,7 +42,7 @@ for k=1:8
     s=horzcat(s,{' %d'});
 end
 s=cell2mat(horzcat(s,{' \n'}));
-fprintf(FID,s,[8*ones(nt,1) t-1]');
+fprintf(FID,s,[8*ones(nt,1) Hexes-1]');
 
 fprintf(FID,'CELL_TYPES %d\n',nt);
 s='%d\n';
@@ -36,6 +50,6 @@ fprintf(FID,s,12*ones(nt,1));
 
 fprintf(FID,['CELL_DATA %s\nSCALARS ' DataName ' float 1\nLOOKUP_TABLE default\n'],num2str(nt));
 s='%f\n';
-fprintf(FID,s,u);
+fprintf(FID,s,Data);
 
 fclose(FID);

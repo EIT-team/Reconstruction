@@ -194,10 +194,14 @@ def SetCamera(Data, DirectionString):
 
 
 def ConvertFilenames(Filenames_input):
-    VTK_Filenames = Filenames_input
-    for iName in range(len(Filenames_input)):
-        # print iName
-        VTK_Filenames[iName] = os.path.abspath(Filenames_input[iName])
-    print VTK_Filenames
+
+    if type(Filenames_input) == list:
+        VTK_Filenames = Filenames_input
+        for iName in range(len(Filenames_input)):
+            # print iName
+            VTK_Filenames[iName] = os.path.abspath(Filenames_input[iName])
+        print VTK_Filenames
+    else:
+        VTK_Filenames = os.path.abspath(Filenames_input)
 
     return VTK_Filenames
