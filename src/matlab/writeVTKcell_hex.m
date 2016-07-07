@@ -6,11 +6,15 @@ if size(Hexes,1) ~= size(Data,1)
 end
 
 if size(Hexes,2) ~= 8
-    error('Hexes not correct, should be H x 8');
+    error('Hexes not correct, should be numHex x 8');
 end
 
 if size(Nodes,2) ~= 3
-    error('Nodes not correct, should be N x 3');
+    error('Nodes not correct, should be numNodes x 3');
+end
+
+if size(Data,2) > 1
+    error('Too much data, should be numHex x 1');
 end
 
 

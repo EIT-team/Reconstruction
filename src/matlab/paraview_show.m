@@ -10,20 +10,17 @@ if size(MeshHex,1) ~= size(Data,1)
     error('Size of data and hexes dont match');
 end
 
-
-TimeSteps = size(Data,2);
-
-
-
+%number of files
+NumSteps = size(Data,2);
+TimeSteps=1:NumSteps;
 
 
 %% Check where we are saving the data to
 %shove it in the temp dir
 
 temp_dir=[fileparts(mfilename('fullpath')) filesep 'temp'];
-temp_vtk_name = 'test.vtk';
+temp_vtk_name = 'test';
 temp_script_name = 'test.py';
-
 
 if exist('SavePath','var') == 0 || isempty(SavePath)
     
@@ -31,8 +28,11 @@ if exist('SavePath','var') == 0 || isempty(SavePath)
     %if none given use temp directory in recon repo -  this is set to be
     %ignored by temp. so we good
     script_path= [temp_dir filesep temp_script_name];
-    vtk_path = [ temp_dir filesep temp_vtk_name];
     
+    % first create string
+    vtk_path_str = [ temp_dir filesep temp_vtk_name];
+    
+    %temp dir might not exist as it is included in .gitignore
     if ~isdir(temp_dir)
         mkdir(temp_dir)
     end
@@ -50,16 +50,22 @@ else
     
     [Save_root,Save_name] = fileparts(SavePath);
     script_path = fullfile(Save_root,[Save_name '.py']);
-    vtk_path = fullfile(Save_root,[Save_name '.vtk']);
-    fprintf('Saving vtkdata in: %s\n',vtk_path);
+    vtk_path_str = fullfile(Save_root,[Save_name]);
+    fprintf('Saving vtkdata in: %s\n',vtk_path_str);
     
 end
+
+%then make cell array for each time step
+vtk_path=cell(NumSteps,1);
+vtk_path(:)={vtk_path_str};
+
+% put in path_1 path_2 form
+vtk_path=strcat(vtk_path,'_',strtrim(cellstr(num2str(TimeSteps'))')','.vtk');
 
 % python and paraview dont like these path formats, so we need to convert
 % to /
 script_path_python = strrep(script_path,'\','/');
 vtk_path_python = strrep(vtk_path,'\','/');
-
 
 %% Get scale and threshold variables
 
@@ -84,7 +90,6 @@ else %if 2 given then use these explicity
         Cmap = [-abs(Cmap) abs(Cmap)];
     end
 end
-
 
 % Find max of dataset rounded up
 MaxNeg = (min(min((Data(Data < 0)))));
@@ -142,7 +147,6 @@ else
         fprintf(2,'Didnt understand camera direction. Ignoring'\n');
         DoCamera =0;
     end
-
 end
 
 %% Display Text
@@ -161,12 +165,12 @@ end
 
 fprintf('\n');
 
-
-
 %% Write the VTK file
 
-writeVTKcell_hex(vtk_path,MeshHex,MeshNodes,Data,Cmap_name);
-
+fprintf('Writing VTKs...\n');
+for iStep = 1:NumSteps
+    writeVTKcell_hex(vtk_path{iStep},MeshHex,MeshNodes,Data(:,iStep),Cmap_name);
+end
 
 %% Write python script
 
@@ -188,12 +192,13 @@ fprintf(fid,'Thr_Pos = [%.2f, %.2f]\n', Thr_Pos(1),Thr_Pos(2));
 fprintf(fid,'Bkg_Op = %.1f \n', Bkg_Op);
 
 %filenames
-fprintf(fid,'VTKnamesIn = ''%s'' \n', vtk_path_python);
+%now *this* is hacky as fuck
+fprintf(fid,'VTKnamesIn = [''%s''] \n', strjoin(vtk_path_python,''','''));
+
 fprintf(fid,'VTK_Filenames = ShowData.ConvertFilenames(VTKnamesIn) \n');
 
-
 %load the data
-fprintf(fid,'Data = LegacyVTKReader(FileNames=[VTK_Filenames])\n');
+fprintf(fid,'Data = LegacyVTKReader(FileNames=VTK_Filenames)\n');
 
 %showdata
 fprintf(fid,'ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)\n');
