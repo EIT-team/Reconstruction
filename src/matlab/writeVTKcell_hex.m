@@ -17,15 +17,12 @@ if size(Data,2) > 1
     error('Too much data, should be numHex x 1');
 end
 
-
-
 [np,dim]=size(Nodes);
 [nt]=size(Hexes,1);
 
 if exist('DataName','var') ==0
     DataName = 'Data';
 end
-
 
 %ensure we ahve .vtk at the end but dont add it if already given
 [PATHSTR,NAME] = fileparts(filename);

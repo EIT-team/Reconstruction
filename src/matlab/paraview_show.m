@@ -1,4 +1,4 @@
-function [ status ] = paraview_show( MeshHex,MeshNodes,Data,SavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr)
+function [ status ] = paraview_show( MeshHex,MeshNodes,Data,SavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,ReuseVTK,AnimationSavePath,FrameRate)
 %PARAVIEW_SHOW Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -50,7 +50,7 @@ else
     
     [Save_root,Save_name] = fileparts(SavePath);
     script_path = fullfile(Save_root,[Save_name '.py']);
-    vtk_path_str = fullfile(Save_root,[Save_name]);
+    vtk_path_str = fullfile(Save_root,Save_name);
     fprintf('Saving vtkdata in: %s\n',vtk_path_str);
     
 end
@@ -132,9 +132,13 @@ legit_camera = [strcat('-',legit_camera) legit_camera strcat('+',legit_camera)];
 %do camera flag - dont write the command if we dont want it
 DoCamera = 1;
 
-if exist('Camera','var') == 0 || isempty(CameraStr)
+if exist('CameraStr','var') == 0 || isempty(CameraStr)
     DoCamera =0;
 else
+    %if its not a string then ignore it
+    if ~ischar(CameraStr)
+        CameraStr='';
+    end
     %check if input is legit
     CameraStr=lower(CameraStr);
     if ismember(CameraStr, legit_camera)
@@ -144,7 +148,7 @@ else
             CameraStr(1)=[];
         end
     else
-        fprintf(2,'Didnt understand camera direction. Ignoring'\n');
+        fprintf(2,'Didnt understand camera direction. Ignoring\n');
         DoCamera =0;
     end
 end
@@ -167,10 +171,68 @@ fprintf('\n');
 
 %% Write the VTK file
 
-fprintf('Writing VTKs...\n');
-for iStep = 1:NumSteps
-    writeVTKcell_hex(vtk_path{iStep},MeshHex,MeshNodes,Data(:,iStep),Cmap_name);
+%set defaults for resuing vtk flag
+if exist('ReuseVTK','var') == 0 || isempty(ReuseVTK)
+    ReuseVTK = 0;
 end
+
+if ReuseVTK
+    fprintf('Using existing VTKs, checking...');
+    file_exists=zeros(NumSteps,1);
+    
+    for iStep = 1:NumSteps
+        file_exists(iStep) = exist(vtk_path{1,1},'file');
+    end
+    
+    if ~all(file_exists)
+        fprintf(':(\n');
+        error('VTK FILES MISSING');
+    end
+    fprintf('done\n');
+    
+else
+    
+    fprintf('Writing VTKs...');
+    for iStep = 1:NumSteps
+        writeVTKcell_hex(vtk_path{iStep},MeshHex,MeshNodes,Data(:,iStep),Cmap_name);
+    end
+    fprintf('done\n');
+end
+
+%% Check Animation 
+
+DoAnimation =1;
+
+if exist('AnimationSavePath','var') == 0 || isempty(AnimationSavePath)
+    DoAnimation = 0;
+    AnimationSavePath='';
+end
+if exist('FrameRate','var') == 0 || isempty(FrameRate)
+    FrameRate = 10;
+end
+
+if DoAnimation
+
+% make path absolute if not given as such
+    javaFileObj = java.io.File(AnimationSavePath);
+    
+    if ~javaFileObj.isAbsolute()
+        AnimationSavePath = fullfile(pwd,AnimationSavePath);
+    end
+    
+    [AnimationSave_root,AnimationSave_name,AnimationSave_ext] = fileparts(AnimationSavePath);
+    if isempty(AnimationSave_ext)
+        AnimationSave_ext='.png';
+        fprintf(2,'NO FILETYPE GIVEN FOR OUTPUT. Using .png\n');
+    end
+
+    animation_path_str = fullfile(AnimationSave_root,[AnimationSave_name AnimationSave_ext]);
+    fprintf('Saving output to file(s) : %s\n',animation_path_str);
+
+end
+
+animation_path_str = strrep(animation_path_str,'\','/');
+
 
 %% Write python script
 
@@ -205,8 +267,14 @@ fprintf(fid,'ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name,
 
 %change camera if we want to
 if DoCamera
-    fprintf(fid,'ShowData.SetCamera(Data, ''%s'')',CameraStr);
+    fprintf(fid,'ShowData.SetCamera(Data, ''%s'')\n',CameraStr);
 end
+
+if DoAnimation
+    fprintf(fid,'ShowData.SaveAnimation(''%s'', %d)',animation_path_str,FrameRate);
+end
+
+fprintf(fid,'\n');
 
 fclose(fid);
 

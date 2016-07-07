@@ -1,7 +1,6 @@
 import os
 from paraview.simple import *
 
-
 def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThresholdValues, ColourMapName,ColourMapLegend,BackgroundOpacityValue):
 
     #### disable automatic camera reset on 'Show'
