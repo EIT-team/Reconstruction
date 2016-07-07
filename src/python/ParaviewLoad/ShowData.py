@@ -6,7 +6,9 @@ def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThr
 
     #### disable automatic camera reset on 'Show'
     paraview.simple._DisableFirstRenderCameraReset()
-    #check if we should do negative or positive thresholds
+
+
+    # check if we should do negative or positive thresholds
 
     Do_Neg_Thres = any(NegativeThresholdValues)
     Do_Pos_Thres = any(PositiveThresholdValues)
@@ -27,12 +29,13 @@ def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThr
 
     print "Setting colourmap for data name: " + ColourMapName
 
-    # get color transfer function/color map for 'u'
+    # get color transfer function/color map for ColourMapName
+    # THIS IS THE DEFAULT PARAVIEW COLOURSCHEME WE KNOW AND LOVE
     uLUT = GetColorTransferFunction(ColourMapName)
     uLUT.RGBPoints = [-1, 0.231373, 0.298039, 0.752941, 0, 0.865003, 0.865003, 0.865003, 1, 0.705882, 0.0156863, 0.14902]
     uLUT.ScalarRangeInitialized = 1.0
 
-    # get opacity transfer function/opacity map for 'u'
+    # get opacity transfer function/opacity map for ColourMapName
     uPWF = GetOpacityTransferFunction(ColourMapName)
     uPWF.Points = [-1, 0.0, 0.5, 0.0, 1, 1.0, 0.5, 0.0]
     uPWF.ScalarRangeInitialized = 1
@@ -105,10 +108,21 @@ def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThr
     # Properties modified on p_seq9_1_22vtkDisplay
     Data_Display_Background.Opacity = BackgroundOpacityValue
 
+    ### DISPLAY DATA IN SCENE WITH TIMESTEPS
+
     # reset view to fit data
     renderView1.ResetCamera()
 
+    # Make it create the scene
     Render()
+
+    # Get the animation time steps - this does nothing if only 1 file loaded
+
+    # get animation scene
+    animationScene1 = GetAnimationScene()
+
+    # update animation scene based on data timesteps
+    animationScene1.UpdateAnimationUsingDataTimeSteps()
 
 
 def SetCamera(Data, DirectionString):
@@ -205,3 +219,6 @@ def ConvertFilenames(Filenames_input):
         VTK_Filenames = os.path.abspath(Filenames_input)
 
     return VTK_Filenames
+
+#def SaveAnimation():
+    #jell
