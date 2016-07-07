@@ -12,7 +12,7 @@ Thr_Neg = [-100, -50]
 Thr_Pos = [20, 40]
 Bkg_Op = 0.1
 
-VTKnames=['../../resources/vtks/nn1.vtk','../../resources/vtks/nn2.vtk','../../resources/vtks/nn3.vtk','../../resources/vtks/nn4.vtk','../../resources/vtks/nn5.vtk']
+VTKnames=['../../resources/vtk/nn1.vtk','../../resources/vtk/nn2.vtk','../../resources/vtk/nn3.vtk','../../resources/vtk/nn4.vtk','../../resources/vtk/nn5.vtk']
 
 VTK_Filenames=ShowData.ConvertFilenames(VTKnames)
 

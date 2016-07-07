@@ -220,5 +220,8 @@ def ConvertFilenames(Filenames_input):
 
     return VTK_Filenames
 
-#def SaveAnimation():
-    #jell
+def SaveAnimation(OutputFilename,FrameRateVal,MagnificationVal = 1.0):
+    # Ensure output in correct format
+    OutputFilename=ConvertFilenames(OutputFilename)
+    # Create file based on magnification and FrameRate
+    WriteAnimation(OutputFilename, Magnification=MagnificationVal, FrameRate=FrameRateVal, Compression=True)

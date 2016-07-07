@@ -12,34 +12,14 @@ Thr_Neg = [-100, -50]
 Thr_Pos = [25, 40]
 Bkg_Op = 0.1
 
-VTKnames=['C:/Users/James/Neonate2016/Parallel/Recon/arm/output/plastic_seq4_1_53.vtk','C:/Users/James/Neonate2016/Parallel/Recon/arm/output/plastic_seq4_1_54.vtk']
-#VTKnames=['E:/Neonate2016/Parallel/Recon/arm_new/output/p_seq9_1_22.vtk', 'E:/Neonate2016/Parallel/Recon/arm_new/output/p_seq9_1_23.vtk']
-
+VTKnames=['../../resources/vtk/nn1.vtk','../../resources/vtk/nn2.vtk','../../resources/vtk/nn3.vtk','../../resources/vtk/nn4.vtk','../../resources/vtk/nn5.vtk']
 
 VTK_Filenames=ShowData.ConvertFilenames(VTKnames)
 
 Data = LegacyVTKReader(FileNames=VTK_Filenames)
 
-
 ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)
 
+ShowData.SaveAnimation('../../resources/vtk/output/ex.png', 5, 2)
 
-
-# ##  get active view
-#renderView1 = GetActiveViewOrCreate('RenderView')
-# DataDisplay = Show(Data, renderView1)
-# # get animation scene
-animationScene1 = GetAnimationScene()
-#
-# # update animation scene based on data timesteps
-animationScene1.UpdateAnimationUsingDataTimeSteps()
-#
-#renderView1.ResetCamera()
-#
-#Render()
-# save animation images/movie
-
-ImageFilename=ShowData.ConvertFilenames('C:/Users/James/test.png')
-
-
-WriteAnimation(ImageFilename, Magnification=1, FrameRate=5.0, Compression=True)
+ShowData.SaveAnimation('../../resources/vtk/output/ex.avi', 5)
