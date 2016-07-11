@@ -128,7 +128,6 @@ def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThr
 def LoadCameraFile(CameraFilename):
     # heavily based on the code posted here https://www.mail-archive.com/paraview@paraview.org/msg20341.html
 
-
     # convert file name to absolute path in linuxy format
     CameraFileNameAbs = os.path.abspath(CameraFilename)
 
@@ -145,7 +144,7 @@ def LoadCameraFile(CameraFilename):
     # use XML parser to read attributes in file
     tree = ET.parse(CameraFileNameAbs)
     root = tree.getroot()
-
+    # get the attributes stored in the file
     for child in root[0]:
         if child.attrib['name'] == 'CameraPosition':
             for subChild in child:
