@@ -23,8 +23,6 @@ CameraFileName = '../../resources/vtk/iso.pvcc'
 
 Data = LegacyVTKReader(FileNames=VTK_Filenames)
 
-
 ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)
-
 
 ShowData.LoadCameraFile(CameraFileName)

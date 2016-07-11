@@ -1,11 +1,50 @@
 function [ status ] = paraview_show( MeshHex,MeshNodes,Data,SavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,ReuseVTK,AnimationSavePath,FrameRate)
-%PARAVIEW_SHOW Summary of this function goes here
-%   Detailed explanation goes here
+%PARAVIEW_SHOW Display data in paraview. Creates loading script and call
+%paraview with this script at start up. Can save animations and
+%screenshots automatically. Can also load camera file.
+
+% This has lots of inputs, but only 3 really needed for command window use.
+% The rest are all needed when you are going to automate creating images or
+% movies.
+
+% Inputs
+% MeshHex - from the Mesh_hex standard struc
+% MeshNodes - from the Mesh_hex standard struc
+% Data - data to write Hex x Timesteps. If none given then dummy array
+% created
+% SavePath - Path to save the VTK and Python script, temp folder used if
+% not. Can be relative or absolute path. doesnt have to end in .vtk
+% Thr_Neg - Threshold to use for negative values. Give either 2 values
+% [-100 -50], or a single value as a coefficient of max. i.e. giving a value
+% of .1 shows top 10%. If not given full width half max used. set to [0,0]
+% to disable.
+% Thr_Pos - As above but with positive values
+% Cmap - colour map range to use, i.e. [-100 100]. If empty -/+ max range is
+% used
+% Cmap_title - Text above colourbar
+% CameraStr - set camera to (-/+) X Y or Z directions with a single string
+% i.e. 'x' or '-y' like the GUI in paraview. Or load a camera file, must
+% end with '.pvcc', i.e. '/iso.pvcc'. Copes with relative or absolute paths
+% ReuseVTK - Flag to save VTKs or not. 0 or empty saves them. 1 resuses
+% them if they exist, throws error if they dont
+% AnimationSavePath - Where to store animations, extensions that work are
+% .png or .avi. .png used if none given. If empty then not used. Relative
+% and absoluate path work
+% FrameRate - Frame rate for animations. 10 used if not given
+
+% example usages....
 
 %% Check inputs
 
-%check if mesh and data match etc.
+%make fake data if none given, use to check mesh etc.
+if exist('Data','var') == 0 || isempty(Data)
+    fprintf('No data given, using temp data\n');
+    Data = 1:size(MeshHex,1);
+    Data = Data - max(Data)/2;
+    Data = Data';
+end
 
+%check if mesh and data match etc.
 if size(MeshHex,1) ~= size(Data,1)
     error('Size of data and hexes dont match');
 end
@@ -13,7 +52,6 @@ end
 %number of files
 NumSteps = size(Data,2);
 TimeSteps=1:NumSteps;
-
 
 %% Check where we are saving the data to
 %shove it in the temp dir
@@ -130,7 +168,7 @@ legit_camera ={'x','y','z'};
 legit_camera = [strcat('-',legit_camera) legit_camera strcat('+',legit_camera)];
 
 %do camera flag - dont write the command if we dont want it
-DoCamera = 1;
+DoCamera = 0;
 
 if exist('CameraStr','var') == 0 || isempty(CameraStr)
     DoCamera =0;
@@ -139,16 +177,41 @@ else
     if ~ischar(CameraStr)
         CameraStr='';
     end
-    %check if input is legit
-    CameraStr=lower(CameraStr);
-    if ismember(CameraStr, legit_camera)
+    
+    %check if string entered is a camera file ending in .pvcc
+    
+    [Cam_root,Cam_name,Cam_ext] = fileparts(CameraStr);
+    
+    if strcmp(Cam_ext,'.pvcc') % load file if camera path given
+        
+        DoCamera = 2; % set flag to load file value
+        
+        %make sure the path is absolute
+        javaFileObj = java.io.File(CameraStr);
+        
+        if ~javaFileObj.isAbsolute()
+            CameraStr = fullfile(pwd,CameraStr);
+        end
+        
+        %get the (possibly) updated new file name
+        [Cam_root,Cam_name,Cam_ext] = fileparts(CameraStr);
+        Camera_path_str = fullfile(Cam_root,[Cam_name Cam_ext]);
+        fprintf('Loading camea file : %s\n',Camera_path_str);
+        
+        %make it linux/python friendly
+        Camera_path_str = strrep(Camera_path_str,'\','/');
+        
+    elseif ismember(lower(CameraStr), legit_camera) %check if input is legit
+        CameraStr=lower(CameraStr);
         %added this as I forgot the correct format after 10 minutes of
         %writing this
         if strcmp(CameraStr(1),'+')
             CameraStr(1)=[];
         end
+        DoCamera =1;
+
     else
-        fprintf(2,'Didnt understand camera direction. Ignoring\n');
+        fprintf(2,'Didnt understand camera direction, ignoring. Must end with .pvcc to use camera file.\n');
         DoCamera =0;
     end
 end
@@ -177,6 +240,7 @@ if exist('ReuseVTK','var') == 0 || isempty(ReuseVTK)
 end
 
 if ReuseVTK
+    % check all vtks exist if asked not to create them
     fprintf('Using existing VTKs, checking...');
     file_exists=zeros(NumSteps,1);
     
@@ -191,7 +255,7 @@ if ReuseVTK
     fprintf('done\n');
     
 else
-    
+    %write all vtks with the correct suffix
     fprintf('Writing VTKs...');
     for iStep = 1:NumSteps
         writeVTKcell_hex(vtk_path{iStep},MeshHex,MeshNodes,Data(:,iStep),Cmap_name);
@@ -199,7 +263,7 @@ else
     fprintf('done\n');
 end
 
-%% Check Animation 
+%% Check Animation
 
 DoAnimation =1;
 
@@ -212,26 +276,30 @@ if exist('FrameRate','var') == 0 || isempty(FrameRate)
 end
 
 if DoAnimation
-
-% make path absolute if not given as such
+    
+    % make path absolute if not given as such
     javaFileObj = java.io.File(AnimationSavePath);
     
     if ~javaFileObj.isAbsolute()
         AnimationSavePath = fullfile(pwd,AnimationSavePath);
     end
     
+    % make output a png if not given otherwise
     [AnimationSave_root,AnimationSave_name,AnimationSave_ext] = fileparts(AnimationSavePath);
     if isempty(AnimationSave_ext)
         AnimationSave_ext='.png';
         fprintf(2,'NO FILETYPE GIVEN FOR OUTPUT. Using .png\n');
     end
-
+    
+    %make a pythony path string
     animation_path_str = fullfile(AnimationSave_root,[AnimationSave_name AnimationSave_ext]);
     fprintf('Saving output to file(s) : %s\n',animation_path_str);
-
+    
+    animation_path_str = strrep(animation_path_str,'\','/');
+    
 end
 
-animation_path_str = strrep(animation_path_str,'\','/');
+
 
 
 %% Write python script
@@ -266,9 +334,12 @@ fprintf(fid,'Data = LegacyVTKReader(FileNames=VTK_Filenames)\n');
 fprintf(fid,'ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)\n');
 
 %change camera if we want to
-if DoCamera
+if DoCamera == 1 %% using default view
     fprintf(fid,'ShowData.SetCamera(Data, ''%s'')\n',CameraStr);
+elseif DoCamera == 2 % using a file previously saved
+    fprintf(fid,'ShowData.LoadCameraFile(''%s'')\n',Camera_path_str);
 end
+
 
 if DoAnimation
     fprintf(fid,'ShowData.SaveAnimation(''%s'', %d)',animation_path_str,FrameRate);
