@@ -1,9 +1,8 @@
 # This code is heavily influenced by (stolen from) http://comments.gmane.org/gmane.comp.science.paraview.user/15091
 # add https://www.mail-archive.com/paraview@paraview.org/msg20341.html to that list!
 
-
-#from paraview.simple import *
-#from ParaviewLoad import ShowData
+from paraview.simple import *
+from ParaviewLoad import ShowData
 
 import xml.etree.ElementTree as ET
 import os
@@ -18,17 +17,17 @@ Bkg_Op = 0.1
 
 VTKnames = ['../../resources/vtk/nn1.vtk']
 
-#VTK_Filenames = ShowData.ConvertFilenames(VTKnames)
+VTK_Filenames = ShowData.ConvertFilenames(VTKnames)
 
 CameraFileName = '../../resources/vtk/iso.pvcc'
 CameraFileNameAbs = os.path.abspath(CameraFileName)
-
-
 
 pos =[0.0,0.0,0.0]
 foc = [0.0,0.0,0.0]
 viewup = [0.0,0.0,0.0]
 parallelscale = 0.0
+cor = [ 0.0, 0.0, 0.0]
+camviewangle = 0
 
 tree = ET.parse(CameraFileNameAbs)
 root = tree.getroot()
@@ -45,20 +44,46 @@ for child in root[0]:
     if child.attrib['name'] == 'CameraFocalPoint':
         for subChild in child:
             foc[int(subChild.attrib['index'])] = float(subChild.attrib['value'])
+    if child.attrib['name'] == 'CenterOfRotation':
+        for subChild in child:
+            cor[int(subChild.attrib['index'])] = float(subChild.attrib['value'])
+    if child.attrib['name'] == 'CameraViewAngle':
+        camviewangle = float(child[0].attrib['value'])
+
 
 
 print "pos is now: " + str(pos)
 
 print "viewup is now: " + str(viewup)
 print "foc is now: " + str(foc)
-
 print "parallelscale is now: " + str(parallelscale)
+print "cor is now: " + str(cor)
+print "camviewangle is now: " + str(camviewangle)
 
-#Data = LegacyVTKReader(FileNames=VTK_Filenames)
+Data = LegacyVTKReader(FileNames=VTK_Filenames)
 
-#ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)
+ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)
 
 #ShowData.SetCamera(Data, 'z')
+
+
+view = GetRenderView()
+view.CameraViewUp = viewup
+view.CameraPosition = pos
+view.CameraFocalPoint = foc
+view.CameraParallelScale = parallelscale
+view.CenterOfRotation = cor
+view.CameraViewAngle = camviewangle
+
+
+
+# current camera placement for renderView1
+# renderView1.CameraPosition = [-199.2377805132849, -323.94508579821644, 584.5306993833535]
+# renderView1.CameraFocalPoint = [-39.27677948151911, -138.17245103934732, 510.07681070226056]
+# renderView1.CameraViewUp = [0.27201457316923106, 0.14692534371214605, 0.9510105232638747]
+# renderView1.CameraParallelScale = 93.90978640184404
+
+
 
 
 # ganesh
@@ -143,10 +168,3 @@ print "parallelscale is now: " + str(parallelscale)
 #     for i in range(size(timeList)):
 #         print a.cameraPosition(timeList[i])
 
-
-# current camera placement for renderView1
-# renderView1.InteractionMode = '2D'
-# renderView1.CameraPosition = [-199.2377805132849, -323.94508579821644, 584.5306993833535]
-# renderView1.CameraFocalPoint = [-39.27677948151911, -138.17245103934732, 510.07681070226056]
-# renderView1.CameraViewUp = [0.27201457316923106, 0.14692534371214605, 0.9510105232638747]
-# renderView1.CameraParallelScale = 93.90978640184404

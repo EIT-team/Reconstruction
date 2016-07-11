@@ -1,5 +1,6 @@
 import os
 from paraview.simple import *
+import xml.etree.ElementTree as ET
 
 def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThresholdValues, ColourMapName,ColourMapLegend,BackgroundOpacityValue):
 
@@ -122,6 +123,62 @@ def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThr
 
     # update animation scene based on data timesteps
     animationScene1.UpdateAnimationUsingDataTimeSteps()
+
+
+def LoadCameraFile(CameraFilename):
+    # heavily based on the code posted here https://www.mail-archive.com/paraview@paraview.org/msg20341.html
+
+
+    # convert file name to absolute path in linuxy format
+    CameraFileNameAbs = os.path.abspath(CameraFilename)
+
+    print "Loading camera file : " + CameraFileNameAbs
+
+    # initialise variables
+    CamPosition = [0.0, 0.0, 0.0]
+    CamFocus = [0.0, 0.0, 0.0]
+    CamViewUp = [0.0, 0.0, 0.0]
+    CamParallelScale = 0.0
+    CamCentreofRot = [0.0, 0.0, 0.0]
+    CamViewAngle = 0
+
+    # use XML parser to read attributes in file
+    tree = ET.parse(CameraFileNameAbs)
+    root = tree.getroot()
+
+    for child in root[0]:
+        if child.attrib['name'] == 'CameraPosition':
+            for subChild in child:
+                CamPosition[int(subChild.attrib['index'])] = float(subChild.attrib['value'])
+        if child.attrib['name'] == 'CameraViewUp':
+            for subChild in child:
+                CamViewUp[int(subChild.attrib['index'])] = float(subChild.attrib['value'])
+        if child.attrib['name'] == 'CameraParallelScale':
+            CamParallelScale = float(child[0].attrib['value'])
+        if child.attrib['name'] == 'CameraFocalPoint':
+            for subChild in child:
+                CamFocus[int(subChild.attrib['index'])] = float(subChild.attrib['value'])
+        if child.attrib['name'] == 'CenterOfRotation':
+            for subChild in child:
+                CamCentreofRot[int(subChild.attrib['index'])] = float(subChild.attrib['value'])
+        if child.attrib['name'] == 'CameraViewAngle':
+            CamViewAngle = float(child[0].attrib['value'])
+
+    print "CameraPosition is now: " + str(CamPosition)
+    print "CameraViewUp is now: " + str(CamViewUp)
+    print "CameraFocus: " + str(CamFocus)
+    print "CameraParallelScale is now: " + str(CamParallelScale)
+    print "CameraCentreOfRotation is now: " + str(CamCentreofRot)
+    print "CameraViewAngle is now: " + str(CamViewAngle)
+
+    # set the positions
+    view = GetRenderView()
+    view.CameraViewUp = CamViewUp
+    view.CameraPosition = CamPosition
+    view.CameraFocalPoint = CamFocus
+    view.CameraParallelScale = CamParallelScale
+    view.CenterOfRotation = CamCentreofRot
+    view.CameraViewAngle = CamViewAngle
 
 
 def SetCamera(Data, DirectionString):
