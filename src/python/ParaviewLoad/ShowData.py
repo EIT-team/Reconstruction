@@ -2,7 +2,7 @@ import os
 from paraview.simple import *
 import xml.etree.ElementTree as ET
 
-def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThresholdValues, ColourMapName,ColourMapLegend,BackgroundOpacityValue):
+def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThresholdValues, ColourMapName = 'Data',ColourMapLegend = 'SigmaIGuess',BackgroundOpacityValue = 0.1):
 
     #### disable automatic camera reset on 'Show'
     paraview.simple._DisableFirstRenderCameraReset()
@@ -123,6 +123,134 @@ def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThr
 
     # update animation scene based on data timesteps
     animationScene1.UpdateAnimationUsingDataTimeSteps()
+
+
+def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, ColourMapName = 'Data'):
+    DefaultCentre = 0
+    DefaultColorMap = 0
+
+    if Centre == None:
+        DefaultCentre = 1
+
+    if ColourMapRange == None:
+        DefaultColorMap = 1
+        print("Using default colormaps")
+        DataRange = Data.CellData[0].GetRange(0)
+
+        print "Data range : " + str(DataRange)
+
+        DataMax = round(max(abs(i) for i in DataRange))
+
+        print "Data max : " + str(DataMax)
+
+        ColourMapRange = [-DataMax, DataMax]
+
+    # create a new 'Rename the Source something useful'
+    RenameSource('Data', Data)
+
+    # get active view
+    renderView1 = GetActiveViewOrCreate('RenderView')
+
+    # show data in view
+    Data_Display = Show(Data, renderView1)
+    Render()
+
+    uLUT = GetColorTransferFunction(ColourMapName)
+    uLUT.RGBPoints = [-1, 0.231373, 0.298039, 0.752941, 0, 0.865003, 0.865003, 0.865003, 1, 0.705882, 0.0156863,
+                      0.14902]
+    uLUT.ScalarRangeInitialized = 1.0
+
+    # get opacity transfer function/opacity map for ColourMapName
+    uPWF = GetOpacityTransferFunction(ColourMapName)
+    uPWF.Points = [-1, 0.0, 0.5, 0.0, 1, 1.0, 0.5, 0.0]
+    uPWF.ScalarRangeInitialized = 1
+
+    #### CHANGE SCALE TO DATA
+
+    # Rescale transfer function
+    uLUT.RescaleTransferFunction(ColourMapRange[0], ColourMapRange[1])
+
+    # Rescale transfer function
+    uPWF.RescaleTransferFunction(ColourMapRange[0], ColourMapRange[1])
+
+    # reset view to fit data
+    renderView1.ResetCamera()
+
+    # show color bar/color legend
+    Data_Display.SetScalarBarVisibility(renderView1, True)
+
+    # get opacity transfer function/opacity map for 'u'
+    uPWF = GetOpacityTransferFunction(ColourMapName)
+
+    if DefaultCentre == 1:
+
+        bounds = Data.GetDataInformation().GetBounds()
+
+        bounds_dx = bounds[1] - bounds[0]
+        bounds_dy = bounds[3] - bounds[2]
+        bounds_dz = bounds[5] - bounds[4]
+        bounds_cx = (bounds[0] + bounds[1]) / 2.0
+        bounds_cy = (bounds[2] + bounds[3]) / 2.0
+        bounds_cz = (bounds[4] + bounds[5]) / 2.0
+
+        Centre = [bounds_cx, bounds_cy, bounds_cz]
+
+    print "Centre of Slice :" + str(Centre)
+
+    # create a new 'Slice'
+    slice1 = Slice(Input=Data)
+    slice1.SliceType = 'Plane'
+    slice1.SliceOffsetValues = [0.0]
+
+    # init the 'Plane' selected for 'SliceType'
+    slice1.SliceType.Origin = Centre
+
+    # set direction of slice
+    slice1.SliceType.Normal = [0.0, 0.0, 1.0]
+
+    # # show data in view
+    slice1Display = Show(slice1, renderView1)
+    # # trace defaults for the display properties.
+    slice1Display.ColorArrayName = ['CELLS', ColourMapName]
+    slice1Display.LookupTable = uLUT
+
+    # hide data in view
+    Hide(Data, renderView1)
+
+    # set active source to get rid of the stuff in the
+    SetActiveSource(Data)
+
+    ShowData.SetCamera(Data, 'z')
+
+
+
+    ##################################################################################CHGECK ASDNASDNASDJHADND DIRECTION HERERERERERERERERERE
+
+    if DefaultColorMap ==1:
+
+        SliceRange = slice1.CellData[0].GetRange(0)
+
+        print "Slice range : " + str(SliceRange)
+
+        SliceMax = round(max(abs(i) for i in SliceRange))
+
+        print "Slice max : " + str(SliceMax)
+
+        uLUT.RescaleTransferFunction(-SliceMax, SliceMax)
+        uPWF.RescaleTransferFunction(-SliceMax, SliceMax)
+    else:
+    # Rescale transfer function
+    uLUT.RescaleTransferFunction(ColourMapRange[0], ColourMapRange[1])
+    # Rescale transfer function
+    uPWF.RescaleTransferFunction(ColourMapRange[0], ColourMapRange[1])
+
+
+
+    # reset view to fit data
+    renderView1.ResetCamera()
+    Render()
+
+
 
 
 def LoadCameraFile(CameraFilename):
@@ -274,6 +402,7 @@ def ConvertFilenames(Filenames_input):
         VTK_Filenames = os.path.abspath(Filenames_input)
 
     return VTK_Filenames
+
 
 def SaveAnimation(OutputFilename,FrameRateVal,MagnificationVal = 1.0):
     # Ensure output in correct format

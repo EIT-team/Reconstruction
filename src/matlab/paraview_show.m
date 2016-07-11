@@ -158,7 +158,7 @@ end
 % SOME DEFAULTS THAT I DOUBT PEOPLE WILL WANT TO ALTER
 
 % This is how the data is refered to in paraview
-Cmap_name = 'Data';
+Cmap_name = 'Data'; %NOT the text on the colorbar
 %background opacity
 Bkg_Op = 0.1;
 
