@@ -2,15 +2,57 @@ import os
 from paraview.simple import *
 import xml.etree.ElementTree as ET
 
-def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThresholdValues,ColourMapLegend = 'SigmaIGuess',BackgroundOpacityValue = 0.1):
 
-    #### disable automatic camera reset on 'Show'
-    paraview.simple._DisableFirstRenderCameraReset()
+def ShowThresholdData(Data, ColourMapRange = None, NegativeThresholdValues = None, PositiveThresholdValues = None, ColourMapLegend = 'Sigma', BackgroundOpacityValue = 0.1, ScalarBarPos = None):
+
+    ##### DEFAULTS
+    DefaultColorMap = 0
+    DefaultSclarBarPosition = 0
+
+    # get data range, used in a few places
+    DataRange = Data.CellData[0].GetRange(0)
+    print "Data range : " + str(DataRange)
 
     # check if we should do negative or positive thresholds
 
-    Do_Neg_Thres = any(NegativeThresholdValues)
-    Do_Pos_Thres = any(PositiveThresholdValues)
+    if NegativeThresholdValues is None:
+
+        print "Using Default Negative Threshold"
+        Do_Neg_Thres = True
+        NegativeThresholdValues = [DataRange[0], DataRange[0]/2]
+    else:
+        Do_Neg_Thres = any(NegativeThresholdValues)
+
+    if PositiveThresholdValues is None:
+
+        print "Using Default Positive Threshold"
+        Do_Pos_Thres = True
+        PositiveThresholdValues = [DataRange[1]/2, DataRange[1]]
+    else:
+        Do_Pos_Thres = any(PositiveThresholdValues)
+
+
+    #### CHECK INPUTS
+
+    if ScalarBarPos == None:
+        print "Using Default ScalarBar Position"
+        DefaultSclarBarPosition = 1
+
+    if ColourMapRange == None:
+        DefaultColorMap = 1
+        print "Using default colormaps"
+
+        DataMax = round(max(abs(i) for i in DataRange))
+
+        print "Data max : " + str(DataMax)
+
+        ColourMapRange = [-DataMax, DataMax]
+
+    ### ACTUAL CODE
+
+
+    #### disable automatic camera reset on 'Show'
+    paraview.simple._DisableFirstRenderCameraReset()
 
     # create a new 'Legacy VTK Reader'
     RenameSource('Data', Data)
@@ -113,6 +155,10 @@ def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThr
 
     ### DISPLAY DATA IN SCENE WITH TIMESTEPS
 
+    if not DefaultSclarBarPosition:
+        scalarbar = GetScalarBar(uLUT)
+        scalarbar.Position = ScalarBarPos
+
     # reset view to fit data
     renderView1.ResetCamera()
 
@@ -128,11 +174,16 @@ def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThr
     animationScene1.UpdateAnimationUsingDataTimeSteps()
 
 
-def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None):
+def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, ColourMapLegend = 'SigmaProbably', ScalarBarPos = None):
+
+    #### DEFAULTS
 
     DefaultCentre = 0
     DefaultColorMap = 0
+    DefaultSclarBarPosition = 0
     SliceNormal = [0.0, 0.0, 0.0]
+
+    #### CHECK INPUTS
 
     if Centre == None:
         print "Using Default Centre"
@@ -168,6 +219,14 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None):
         print "DONT UNDERSTAND INPUT"
         return
 
+    if ScalarBarPos == None:
+        print "Using Default ScalarBar Position"
+        DefaultSclarBarPosition = 1
+
+
+
+    ###### CODE STARTS HERE
+
     # create a new 'Rename the Source something useful'
     RenameSource('Data', Data)
 
@@ -202,14 +261,15 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None):
     # Rescale transfer function
     uPWF.RescaleTransferFunction(ColourMapRange[0], ColourMapRange[1])
 
+    ### RENAME STUFF
+
+    print "Setting colourmap legend text to : " + ColourMapLegend
+
     # reset view to fit data
     renderView1.ResetCamera()
 
     # show color bar/color legend
     Data_Display.SetScalarBarVisibility(renderView1, True)
-
-    # get opacity transfer function/opacity map for 'u'
-    uPWF = GetOpacityTransferFunction(ColourMapName)
 
     if DefaultCentre == 1:
 
@@ -256,7 +316,7 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None):
 
     SetCamera(Data, DirectionString)
 
-    if DefaultColorMap ==1:
+    if DefaultColorMap == 1:
 
         SliceRange = slice1.CellData[0].GetRange(0)
 
@@ -274,9 +334,27 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None):
         # Rescale transfer function
         uPWF.RescaleTransferFunction(ColourMapRange[0], ColourMapRange[1])
 
+
+    # get color legend/bar for uLUT in view renderView1
+    uLUTColorBar = GetScalarBar(uLUT, renderView1)
+
+    # Properties modified on uLUTColorBar
+    uLUTColorBar.Title = ColourMapLegend
+
+    if not DefaultSclarBarPosition:
+        scalarbar = GetScalarBar(uLUT)
+        scalarbar.Position = ScalarBarPos
+
+
     # reset view to fit data
     renderView1.ResetCamera()
     Render()
+    # Get the animation time steps - this does nothing if only 1 file loaded
+
+    # get animation scene
+    animationScene1 = GetAnimationScene()
+    # update animation scene based on data timesteps
+    animationScene1.UpdateAnimationUsingDataTimeSteps()
 
 
 
@@ -364,10 +442,6 @@ def SetCamera(Data, DirectionString):
     bounds_cy = (bounds[2] + bounds[3]) / 2.0
     bounds_cz = (bounds[4] + bounds[5]) / 2.0
 
-
-    #weird things were happening when the camera was still inside the mesh
-
-
     if dimMode == 2:
         # xy Z equivalent
         camUp = [0.0, 1.0, 0.0]
@@ -411,7 +485,7 @@ def SetCamera(Data, DirectionString):
     Render()
     view.ResetCamera()
     ResetCamera()
-    # for fine tuning
+    # for fine tuning, not having this as input at the moment as there is already too many
     config_camZoom = 1.0
     cam = GetActiveCamera()
     cam.Zoom(config_camZoom)
@@ -432,8 +506,14 @@ def ConvertFilenames(Filenames_input):
     return VTK_Filenames
 
 
-def SaveAnimation(OutputFilename,FrameRateVal,MagnificationVal = 1.0):
+def SaveAnimation(OutputFilename, FrameRateVal, MagnificationVal = 1.0, OrientationAxisVisible = 0):
     # Ensure output in correct format
+
+    view = GetRenderView()
+    view.OrientationAxesVisibility = OrientationAxisVisible
+    Render()
+
     OutputFilename=ConvertFilenames(OutputFilename)
     # Create file based on magnification and FrameRate
     WriteAnimation(OutputFilename, Magnification=MagnificationVal, FrameRate=FrameRateVal, Compression=True)
+

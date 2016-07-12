@@ -1,5 +1,5 @@
-function [ status ] = paraview_show( MeshHex,MeshNodes,Data,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,SavePath,ReuseVTK,AnimationSavePath,FrameRate)
-%PARAVIEW_SHOW Display data in paraview. Creates loading script and call
+function [ status ] = paraview_showslice( MeshHex,MeshNodes,Data,CameraStr,Centre,Cmap,Cmap_title,SavePath,ReuseVTK,AnimationSavePath,FrameRate)
+%PARAVIEW_SHOWSLICE Display data in paraview as a slice. Creates loading script and call
 %paraview with this script at start up. Can save animations and
 %screenshots automatically. Can also load camera file.
 
@@ -14,11 +14,6 @@ function [ status ] = paraview_show( MeshHex,MeshNodes,Data,Thr_Neg,Thr_Pos,Cmap
 % created
 % SavePath - Path to save the VTK and Python script, temp folder used if
 % not. Can be relative or absolute path. doesnt have to end in .vtk
-% Thr_Neg - Threshold to use for negative values. Give either 2 values
-% [-100 -50], or a single value as a coefficient of max. i.e. giving a value
-% of .1 shows top 10%. If not given full width half max used. set to [0,0]
-% to disable.
-% Thr_Pos - As above but with positive values
 % Cmap - colour map range to use, i.e. [-100 100]. If empty -/+ max range is
 % used
 % Cmap_title - Text above colourbar
@@ -47,6 +42,21 @@ end
 %check if mesh and data match etc.
 if size(MeshHex,1) ~= size(Data,1)
     error('Size of data and hexes dont match');
+end
+
+%check if centre given - pyuthon script will take centre of mesh if not
+%given
+if exist('Centre','var') == 0 || isempty(Centre)
+    fprintf('No centre given, using centre of mesh\n');
+    DoCentre =0;
+else
+    if size(Centre,2) == 3
+        DoCentre =1;
+        fprintf('Using centre : [%.2f,%.2f,%.2f]\n',Centre(1),Centre(2),Centre(3));
+    else
+        DoCentre =0;
+        fprintf(2,'Dont understand centre input. Using default');
+    end
 end
 
 %number of files
@@ -113,6 +123,9 @@ vtk_path_python = strrep(vtk_path,'\','/');
 
 if exist('Cmap_title','var') == 0 || isempty(Cmap_title)
     Cmap_title = 'SigmaProbably';
+    DoCmapTitle =0;
+else
+    DoCmapTitle =1;
 end
 
 % Find max of dataset rounded up
@@ -122,47 +135,16 @@ MaxinData = ceil(max(max(abs(Data))));
 if exist('Cmap','var') == 0 || isempty(Cmap)
     %if not given then take default which is centred at 0
     Cmap = [-MaxinData, MaxinData];
+    
+    DoColourMap = 0;
+    
 else %if 2 given then use these explicity
+    
+    DoColourMap = 1;
+    
     if length(Cmap) == 1
         %if only 1 given, then duplicate this for both min and max changes
         Cmap = [-abs(Cmap) abs(Cmap)];
-    end
-end
-
-% Find max of dataset rounded up
-MaxNeg = (min(min((Data(Data < 0)))));
-
-if isempty(MaxNeg)
-    MaxNeg =0; % functions below dont like empty values. so set to zero
-end
-
-
-% Default threshold is FWHM in each direction
-if exist('Thr_Neg','var') == 0 || isempty(Thr_Neg)
-    %if not given then do defaults
-    Thr_Neg =[MaxNeg, MaxNeg/2];
-else % if 2 given then use these explicit values
-    if length(Thr_Neg) == 1
-        %only 1 given then take this as a coefficient - i.e. 0.5 is full
-        %width half max. 0.3 is full width third max etc.
-        Thr_Neg = [MaxNeg, (1-abs(Thr_Neg))*MaxNeg];
-    end
-end
-
-%find the biggest change of negative and positive directions
-MaxPos = (max(max((Data(Data > 0)))));
-
-if isempty(MaxPos)
-    MaxPos =0; % functions below dont like empty values. so set to zero
-end
-
-if exist('Thr_Pos','var') == 0 || isempty(Thr_Pos)
-    Thr_Pos =[MaxPos/2, MaxPos];
-else % if 2 given then use these explicit values
-    if length(Thr_Pos) == 1
-        %only 1 given then take this as a coefficient - i.e. 0.5 is full
-        %width half max. 0.3 is full width third max etc.
-        Thr_Pos = [(1-abs(Thr_Pos))*MaxPos, MaxPos];
     end
 end
 
@@ -178,70 +160,41 @@ Bkg_Op = 0.1;
 legit_camera ={'x','y','z'};
 legit_camera = [strcat('-',legit_camera) legit_camera strcat('+',legit_camera)];
 
-%do camera flag - dont write the command if we dont want it
-DoCamera = 0;
-
 if exist('CameraStr','var') == 0 || isempty(CameraStr)
-    DoCamera =0;
+    CameraStr = 'y';
+    fprintf(2,'No Camera string given, so using ''y'' \n');
+    
 else
-    %if its not a string then ignore it
+    %if its not a string then set to default it
     if ~ischar(CameraStr)
-        CameraStr='';
+        CameraStr = 'y';
+        fprintf(2,'No Camera string given, so using ''y'' \n');
     end
     
-    %check if string entered is a camera file ending in .pvcc
-    
-    [Cam_root,Cam_name,Cam_ext] = fileparts(CameraStr);
-    
-    if strcmp(Cam_ext,'.pvcc') % load file if camera path given
-        
-        DoCamera = 2; % set flag to load file value
-        
-        %make sure the path is absolute
-        javaFileObj = java.io.File(CameraStr);
-        
-        if ~javaFileObj.isAbsolute()
-            CameraStr = fullfile(pwd,CameraStr);
-        end
-        
-        %get the (possibly) updated new file name
-        [Cam_root,Cam_name,Cam_ext] = fileparts(CameraStr);
-        Camera_path_str = fullfile(Cam_root,[Cam_name Cam_ext]);
-        fprintf('Loading camera file : %s\n',Camera_path_str);
-        
-        %make it linux/python friendly
-        Camera_path_str = strrep(Camera_path_str,'\','/');
-        
-    elseif ismember(lower(CameraStr), legit_camera) %check if input is legit
+    if ismember(lower(CameraStr), legit_camera) %check if input is legit
         CameraStr=lower(CameraStr);
         %added this as I forgot the correct format after 10 minutes of
         %writing this
         if strcmp(CameraStr(1),'+')
             CameraStr(1)=[];
         end
-        DoCamera =1;
-
+        
     else
         fprintf(2,'Didnt understand camera direction, ignoring. Must end with .pvcc to use camera file.\n');
-        DoCamera =0;
+        CameraStr = 'y';
+        fprintf(2,'No Camera string given, so using ''y'' \n');
     end
 end
 
 %% Display Text
 %output to user
+
+if DoColourMap
 fprintf('Values used: Cmap=[%d,%d] ', Cmap(1),Cmap(2));
-
-if any(Thr_Neg)
-    fprintf('Thr_Neg=[%.2f,%.2f] ', Thr_Neg(1),Thr_Neg(2));
+else
+    fprintf('Setting colourmap based on range in slice');
 end
-if any(Thr_Pos)
-    fprintf('Thr_Pos=[%.2f, %.2f] ', Thr_Pos(1),Thr_Pos(2));
-end
-if DoCamera
-    fprintf('\nSetting Camera with %s',CameraStr);
-end
-
-fprintf('\n');
+fprintf('\nSetting Camera and slicing with %s\n',CameraStr);
 
 %% Write the VTK file
 
@@ -310,7 +263,6 @@ if DoAnimation
     
 end
 
-
 %% Write python script
 
 %this is hacky as fuck and I dont like it. But it works.
@@ -324,11 +276,8 @@ fprintf(fid,'from paraview.simple import *\n');
 fprintf(fid,'from ParaviewLoad import ShowData\n');
 % variables
 
-fprintf(fid,'Cmap_title = ''%s'' \n', Cmap_title);
 fprintf(fid,'Cmap = [%d, %d]\n', Cmap(1),Cmap(2));
-fprintf(fid,'Thr_Neg = [%.2f, %.2f]\n', Thr_Neg(1),Thr_Neg(2));
-fprintf(fid,'Thr_Pos = [%.2f, %.2f]\n', Thr_Pos(1),Thr_Pos(2));
-fprintf(fid,'Bkg_Op = %.1f \n', Bkg_Op);
+fprintf(fid,'Cmap_title = ''%s'' \n', Cmap_title);
 
 %filenames
 %now *this* is hacky as fuck
@@ -339,15 +288,22 @@ fprintf(fid,'VTK_Filenames = ShowData.ConvertFilenames(VTKnamesIn) \n');
 %load the data
 fprintf(fid,'Data = LegacyVTKReader(FileNames=VTK_Filenames)\n');
 
-%showdata
-fprintf(fid,'ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_title, Bkg_Op)\n');
+%showslice with required arguments
+fprintf(fid,'ShowData.ShowSliceData(Data, ''%s''',CameraStr);
 
-%change camera if we want to
-if DoCamera == 1 %% using default view
-    fprintf(fid,'ShowData.SetCamera(Data, ''%s'')\n',CameraStr);
-elseif DoCamera == 2 % using a file previously saved
-    fprintf(fid,'ShowData.LoadCameraFile(''%s'')\n',Camera_path_str);
+if DoCentre
+    fprintf(fid,',Centre=[%.2f,%.2f,%.2f]',Centre(1),Centre(2),Centre(3));
 end
+
+if DoColourMap
+    fprintf(fid,',ColourMapRange=Cmap');
+end
+
+
+if DoCmapTitle
+    fprintf(fid,',ColourMapLegend=Cmap_title');
+end
+fprintf(fid,')\n');
 
 
 if DoAnimation
