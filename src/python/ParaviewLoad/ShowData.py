@@ -50,7 +50,6 @@ def ShowThresholdData(Data, ColourMapRange = None, NegativeThresholdValues = Non
 
     ### ACTUAL CODE
 
-
     #### disable automatic camera reset on 'Show'
     paraview.simple._DisableFirstRenderCameraReset()
 
@@ -357,6 +356,25 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, C
     animationScene1.UpdateAnimationUsingDataTimeSteps()
 
 
+def ShowSphere(Centre, Radius = 5, Name = 'ExPosition'):
+
+    sphere1 = Sphere()
+    sphere1.Center = Centre
+    sphere1.Radius = Radius
+
+    # Properties modified on sphere1
+    sphere1.ThetaResolution = 16
+    sphere1.PhiResolution = 16
+
+    RenameSource(Name, sphere1)
+
+    renderView1 = GetActiveViewOrCreate('RenderView')
+    # show data in view
+    sphere1Display = Show(sphere1, renderView1)
+    # reset view to fit data
+    renderView1.ResetCamera()
+
+    Render()
 
 
 def LoadCameraFile(CameraFilename):
