@@ -2,11 +2,10 @@ import os
 from paraview.simple import *
 import xml.etree.ElementTree as ET
 
-def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThresholdValues, ColourMapName = 'Data',ColourMapLegend = 'SigmaIGuess',BackgroundOpacityValue = 0.1):
+def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThresholdValues,ColourMapLegend = 'SigmaIGuess',BackgroundOpacityValue = 0.1):
 
     #### disable automatic camera reset on 'Show'
     paraview.simple._DisableFirstRenderCameraReset()
-
 
     # check if we should do negative or positive thresholds
 
@@ -24,6 +23,10 @@ def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThr
 
     # show color bar/color legend
     Data_Display_Background.SetScalarBarVisibility(renderView1, True)
+
+    # find the name of the array
+    CellData = Data.CellData[0]
+    ColourMapName = CellData.Name
 
     #### SET DEFAULT COLORMAPS AND STUFF
 
@@ -125,7 +128,7 @@ def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThr
     animationScene1.UpdateAnimationUsingDataTimeSteps()
 
 
-def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, ColourMapName = 'u'):
+def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None):
 
     DefaultCentre = 0
     DefaultColorMap = 0
@@ -174,6 +177,12 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, C
     # show data in view
     Data_Display = Show(Data, renderView1)
     Render()
+
+    # find the name of the array
+    CellData = Data.CellData[0]
+    ColourMapName = CellData.Name
+
+    print "ColourMapName data is: " + ColourMapName
 
     uLUT = GetColorTransferFunction(ColourMapName)
     uLUT.RGBPoints = [-1, 0.231373, 0.298039, 0.752941, 0, 0.865003, 0.865003, 0.865003, 1, 0.705882, 0.0156863,

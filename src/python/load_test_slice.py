@@ -4,7 +4,6 @@ import os
 from paraview.simple import *
 from ParaviewLoad import ShowData
 
-ColourMapName = 'u'
 Cmap_title = 'The stuff'
 
 ColourMapRange = [-10, 10]
@@ -22,4 +21,4 @@ Data = LegacyVTKReader(FileNames=VTK_Filenames)
 
 #ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)
 
-ShowData.ShowSliceData(Data,'-z')
+ShowData.ShowSliceData(Data, '-z')

@@ -300,8 +300,6 @@ if DoAnimation
 end
 
 
-
-
 %% Write python script
 
 %this is hacky as fuck and I dont like it. But it works.
@@ -314,7 +312,7 @@ fprintf(fid,'import os\n');
 fprintf(fid,'from paraview.simple import *\n');
 fprintf(fid,'from ParaviewLoad import ShowData\n');
 % variables
-fprintf(fid,'Cmap_name = ''%s'' \n', Cmap_name);
+
 fprintf(fid,'Cmap_title = ''%s'' \n', Cmap_title);
 fprintf(fid,'Cmap = [%d, %d]\n', Cmap(1),Cmap(2));
 fprintf(fid,'Thr_Neg = [%.2f, %.2f]\n', Thr_Neg(1),Thr_Neg(2));
@@ -331,7 +329,7 @@ fprintf(fid,'VTK_Filenames = ShowData.ConvertFilenames(VTKnamesIn) \n');
 fprintf(fid,'Data = LegacyVTKReader(FileNames=VTK_Filenames)\n');
 
 %showdata
-fprintf(fid,'ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)\n');
+fprintf(fid,'ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_title, Bkg_Op)\n');
 
 %change camera if we want to
 if DoCamera == 1 %% using default view

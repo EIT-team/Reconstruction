@@ -4,7 +4,6 @@ import os
 from paraview.simple import *
 from ParaviewLoad import ShowData
 
-Cmap_name = 'u'
 Cmap_title = 'The stuff'
 
 Cmap = [-100, 100]
@@ -18,4 +17,4 @@ VTK_Filenames = ShowData.ConvertFilenames(VTKnames)
 
 Data = LegacyVTKReader(FileNames=VTK_Filenames)
 
-ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)
+ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_title, Bkg_Op)
