@@ -125,16 +125,19 @@ def ShowThresholdData(Data, ColourMapRange, NegativeThresholdValues, PositiveThr
     animationScene1.UpdateAnimationUsingDataTimeSteps()
 
 
-def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, ColourMapName = 'Data'):
+def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, ColourMapName = 'u'):
+
     DefaultCentre = 0
     DefaultColorMap = 0
+    SliceNormal = [0.0, 0.0, 0.0]
 
     if Centre == None:
+        print "Using Default Centre"
         DefaultCentre = 1
 
     if ColourMapRange == None:
         DefaultColorMap = 1
-        print("Using default colormaps")
+        print "Using default colormaps"
         DataRange = Data.CellData[0].GetRange(0)
 
         print "Data range : " + str(DataRange)
@@ -144,6 +147,23 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, C
         print "Data max : " + str(DataMax)
 
         ColourMapRange = [-DataMax, DataMax]
+
+    LegitStrings = ['x', 'y', 'z']
+    camDirection = 1
+
+    DirectionString = DirectionString.lower()
+
+    if DirectionString.startswith('-'):
+        camDirection = -1
+        DirectionString = DirectionString[1]
+        #print "negative direction"
+
+    if DirectionString in LegitStrings:
+        dimIdx = LegitStrings.index(DirectionString)
+        SliceNormal[dimIdx] = 1.0
+    else:
+        print "DONT UNDERSTAND INPUT"
+        return
 
     # create a new 'Rename the Source something useful'
     RenameSource('Data', Data)
@@ -205,8 +225,10 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, C
     # init the 'Plane' selected for 'SliceType'
     slice1.SliceType.Origin = Centre
 
+    print "Slice Normal : " + str(SliceNormal)
+
     # set direction of slice
-    slice1.SliceType.Normal = [0.0, 0.0, 1.0]
+    slice1.SliceType.Normal = SliceNormal
 
     # # show data in view
     slice1Display = Show(slice1, renderView1)
@@ -220,11 +242,10 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, C
     # set active source to get rid of the stuff in the
     SetActiveSource(Data)
 
-    ShowData.SetCamera(Data, 'z')
+    if camDirection == -1:
+        DirectionString  = '-' + DirectionString
 
-
-
-    ##################################################################################CHGECK ASDNASDNASDJHADND DIRECTION HERERERERERERERERERE
+    SetCamera(Data, DirectionString)
 
     if DefaultColorMap ==1:
 
@@ -239,12 +260,10 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, C
         uLUT.RescaleTransferFunction(-SliceMax, SliceMax)
         uPWF.RescaleTransferFunction(-SliceMax, SliceMax)
     else:
-    # Rescale transfer function
-    uLUT.RescaleTransferFunction(ColourMapRange[0], ColourMapRange[1])
-    # Rescale transfer function
-    uPWF.RescaleTransferFunction(ColourMapRange[0], ColourMapRange[1])
-
-
+        # Rescale transfer function
+        uLUT.RescaleTransferFunction(ColourMapRange[0], ColourMapRange[1])
+        # Rescale transfer function
+        uPWF.RescaleTransferFunction(ColourMapRange[0], ColourMapRange[1])
 
     # reset view to fit data
     renderView1.ResetCamera()
