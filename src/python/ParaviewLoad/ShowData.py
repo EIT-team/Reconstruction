@@ -357,7 +357,10 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, C
     animationScene1.UpdateAnimationUsingDataTimeSteps()
 
 
-def ShowSphere(Centre, Radius = 5, Name = 'ExPosition'):
+def ShowSphere(Centre, Radius = None, Name = 'ExPosition'):
+
+    if Radius is None:
+        Radius = 5
 
     sphere1 = Sphere()
     sphere1.Center = Centre
@@ -378,44 +381,39 @@ def ShowSphere(Centre, Radius = 5, Name = 'ExPosition'):
     Render()
 
 
-def ShowSphereCSV(CSVfile):
-    csvfilename = os.path.abspath(csvfilename)
+def ShowSphereCSV(CSVfile, Radius = None, TimePoint = None, Name_prefix = None):
+    # show a spehere based on position in a csv file
+    # convert to absolute path
+    CSVfile = os.path.abspath(CSVfile)
 
-    animationScene1 = GetAnimationScene()
-    target = int(animationScene1.AnimationTime)
-    print "Target value is: " + str(target)
 
-    pos = [0.0, 0.0, 0.0]
+    if TimePoint is None:
+        animationScene1 = GetAnimationScene()
+        TimePoint = int(animationScene1.AnimationTime)
+        print "Timepoint from Animation step value is: " + str(TimePoint)
+    else:
+        print "User Set timepoint " + str(TimePoint)
+
+    if Name_prefix is None:
+        Name_prefix = 'ExPos_'
+
+    # read the specific line from the csv file
+    Centre = [0.0, 0.0, 0.0]
     count = 0
-    with open(csvfilename) as f:
+    with open(CSVfile) as f:
         r = csv.reader(f)
         for row in r:
-            print "Current row :" + str(row)
-            if count == target:
-                print "found it"
-                pos = [float(i) for i in row]
+            #print "Current row :" + str(row)
+            if count == TimePoint:
+                #print "found it"
+                Centre = [float(i) for i in row]
                 break
             count += 1
 
-    print "Pos is now : " + str(pos)
-
-    sphere1 = Sphere()
-    sphere1.Center = pos
-    sphere1.Radius = 5
-
-    # Properties modified on sphere1
-    sphere1.ThetaResolution = 16
-    sphere1.PhiResolution = 16
-
-    # RenameSource(Name, sphere1)
-
-    renderView1 = GetActiveViewOrCreate('RenderView')
-    # show data in view
-    sphere1Display = Show(sphere1, renderView1)
-    # reset view to fit data
-    renderView1.ResetCamera()
-
-    Render()
+    print "Pos is now : " + str(Centre)
+    
+    # make sphere with this centre
+    ShowSphere(Centre, Radius, Name_prefix + str(TimePoint))
 
 
 def LoadCameraFile(CameraFilename):
