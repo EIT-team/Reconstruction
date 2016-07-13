@@ -1,4 +1,4 @@
-function [ status ] = paraview_show( MeshHex,MeshNodes,Data,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,SavePath,ReuseVTK,AnimationSavePath,FrameRate)
+function [ status ] = paraview_compare( MeshHex,MeshNodes,Data,CentreToCompare,Radius,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,SavePath,ReuseVTK,AnimationSavePath,FrameRate)
 %PARAVIEW_SHOW Display data in paraview. Creates loading script and call
 %paraview with this script at start up. Can save animations and
 %screenshots automatically. Can also load camera file.
@@ -53,12 +53,44 @@ end
 NumSteps = size(Data,2);
 TimeSteps=1:NumSteps;
 
+if exist('CentreToCompare','var') == 0 || isempty(CentreToCompare)
+    error('No comparison positions given');
+else
+    if size(CentreToCompare,2) == 3
+        
+        if size(CentreToCompare,1) == 1
+            CentreToCompare = repmat(CentreToCompare,NumSteps);
+        elseif size(CentreToCompare,1) ~= NumSteps
+            error('Number of positions dont match timesteps. Use 1 or NumSteps');
+        end
+            
+        fprintf('Comparing to centres : [%.2f,%.2f,%.2f]\n',CentreToCompare(1),CentreToCompare(2),CentreToCompare(3));
+    else
+        error('Dont understand centre to compare input');
+    end
+end
+
+if exist('Radius','var') == 0 || isempty(Radius)
+    fprintf('Using default radius of 5mm');
+    DoRadius = 0;
+    Radius=5; %but we just dont set it as use python default
+else
+    if ~isnumeric(Radius)
+        error('Dont understand radius');
+    end
+    DoRadius =1;
+end
+
+
+
+
 %% Check where we are saving the data to
 %shove it in the temp dir
 
 temp_dir=[fileparts(mfilename('fullpath')) filesep 'temp'];
 temp_vtk_name = 'test';
 temp_script_name = 'test.py';
+temp_positioncsv_name = 'testpositions.csv';
 
 if exist('SavePath','var') == 0 || isempty(SavePath)
     
@@ -66,6 +98,7 @@ if exist('SavePath','var') == 0 || isempty(SavePath)
     %if none given use temp directory in recon repo -  this is set to be
     %ignored by temp. so we good
     script_path= [temp_dir filesep temp_script_name];
+    csv_path = [temp_dir filesep temp_positioncsv_name];
     
     % first create string
     vtk_path_str = [ temp_dir filesep temp_vtk_name];
@@ -88,6 +121,7 @@ else
     
     [Save_root,Save_name] = fileparts(SavePath);
     script_path = fullfile(Save_root,[Save_name '.py']);
+    csv_path = fullfile(Save_root,[Save_name '.csv']);
     vtk_path_str = fullfile(Save_root,Save_name);
     fprintf('Saving vtkdata in: %s\n',vtk_path_str);
     
@@ -104,6 +138,7 @@ vtk_path=strcat(vtk_path,'_',strtrim(cellstr(num2str(TimeSteps'))')','.vtk');
 % to /
 script_path_python = strrep(script_path,'\','/');
 vtk_path_python = strrep(vtk_path,'\','/');
+csv_path_python = strrep(csv_path,'\','/');
 
 %% Get scale and threshold variables
 
@@ -309,6 +344,11 @@ if DoAnimation
     animation_path_str = strrep(animation_path_str,'\','/');
     
 end
+%% save positions to CSV file 
+
+%these positions are loaded by python script. 
+dlmwrite(csv_path,CentreToCompare);
+
 
 
 %% Write python script
@@ -323,6 +363,9 @@ fprintf(fid,'import os\n');
 fprintf(fid,'from paraview.simple import *\n');
 fprintf(fid,'from ParaviewLoad import ShowData\n');
 % variables
+
+fprintf(fid,'CSVpath = ''%s'' \n',csv_path_python);
+fprintf(fid,'Centre = [%.2f, %.2f, %.2f]\n', CentreToCompare(1),CentreToCompare(2),CentreToCompare(3));
 
 fprintf(fid,'Cmap_title = ''%s'' \n', Cmap_title);
 fprintf(fid,'Cmap = [%d, %d]\n', Cmap(1),Cmap(2));
@@ -341,6 +384,15 @@ fprintf(fid,'Data = LegacyVTKReader(FileNames=VTK_Filenames)\n');
 
 %showdata
 fprintf(fid,'ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_title, Bkg_Op)\n');
+
+%create sphere object
+fprintf(fid,'ShowData.ShowSphere(Centre');
+
+if DoRadius
+    fprintf(fid,', Radius=%.2f ',Radius);
+end
+fprintf(fid,')');
+
 
 %change camera if we want to
 if DoCamera == 1 %% using default view

@@ -1,4 +1,5 @@
 import os
+import csv
 from paraview.simple import *
 import xml.etree.ElementTree as ET
 
@@ -367,6 +368,46 @@ def ShowSphere(Centre, Radius = 5, Name = 'ExPosition'):
     sphere1.PhiResolution = 16
 
     RenameSource(Name, sphere1)
+
+    renderView1 = GetActiveViewOrCreate('RenderView')
+    # show data in view
+    sphere1Display = Show(sphere1, renderView1)
+    # reset view to fit data
+    renderView1.ResetCamera()
+
+    Render()
+
+
+def ShowSphereCSV(CSVfile):
+    csvfilename = os.path.abspath(csvfilename)
+
+    animationScene1 = GetAnimationScene()
+    target = int(animationScene1.AnimationTime)
+    print "Target value is: " + str(target)
+
+    pos = [0.0, 0.0, 0.0]
+    count = 0
+    with open(csvfilename) as f:
+        r = csv.reader(f)
+        for row in r:
+            print "Current row :" + str(row)
+            if count == target:
+                print "found it"
+                pos = [float(i) for i in row]
+                break
+            count += 1
+
+    print "Pos is now : " + str(pos)
+
+    sphere1 = Sphere()
+    sphere1.Center = pos
+    sphere1.Radius = 5
+
+    # Properties modified on sphere1
+    sphere1.ThetaResolution = 16
+    sphere1.PhiResolution = 16
+
+    # RenameSource(Name, sphere1)
 
     renderView1 = GetActiveViewOrCreate('RenderView')
     # show data in view

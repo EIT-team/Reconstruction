@@ -299,7 +299,6 @@ if DoColourMap
     fprintf(fid,',ColourMapRange=Cmap');
 end
 
-
 if DoCmapTitle
     fprintf(fid,',ColourMapLegend=Cmap_title');
 end
