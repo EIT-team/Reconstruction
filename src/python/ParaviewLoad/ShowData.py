@@ -416,6 +416,46 @@ def ShowSphereCSV(CSVfile, Radius = None, TimePoint = None, Name_prefix = None):
     ShowSphere(Centre, Radius, Name_prefix + str(TimePoint))
 
 
+def ShowSphereCSVClip(Data,CSVfile, Radius = None, Name = None):
+
+    CSVfile = ConvertFilenames(CSVfile)
+
+    CSVfile = CSVfile.replace('\\', '/')
+
+    print "filename is" + str(CSVfile)
+
+    if Radius is None:
+        Radius = 5
+
+    if Name is None:
+        Name = 'IdealPosition'
+
+    # create a new 'Programmable Filter'
+    programmableFilter1 = ProgrammableFilter(Input=Data)
+    RenameSource(Name, programmableFilter1)
+    programmableFilter1.RequestInformationScript = ''
+    programmableFilter1.RequestUpdateExtentScript = ''
+    programmableFilter1.PythonPath = ''
+
+    # Properties modified on programmableFilter1
+    programmableFilter1.Script = 'csvfilename = \'' + CSVfile + '\'\nimport vtk\nimport csv\ninput = self.GetInputDataObject(0, 0)\noutput = self.GetOutputDataObject(0)\n\nt = self.GetInputDataObject(0,0).GetInformation().Get(vtk.vtkDataObject.DATA_TIME_STEP())\nTimePoint  = int(t)\n    # read the specific line from the csv file\nCentre = [0.0, 0.0, 0.0]\ncount = 0\n\nwith open(csvfilename) as f:\n    r = csv.reader(f)\n    for row in r:\n    #print "Current row :" + str(row)\n        if count == TimePoint:\n    #    print "found it"\n            Centre = [float(i) for i in row]\n            break\n        count += 1\n\n    #print "Pos is now : " + str(Centre)\n\n\ns = vtk.vtkSphere()\ns.SetCenter(Centre)\ns.SetRadius(' + str(Radius) + ')\n\nclip = vtk.vtkClipDataSet()\nclip.SetInputDataObject(input)\nclip.SetClipFunction(s)\nclip.SetValue(0.0)\nclip.InsideOutOn()\nclip.Update()\n#print clip\n\noutput.ShallowCopy(clip.GetOutputDataObject(0))\n'
+
+    # get active view
+    renderView1 = GetActiveViewOrCreate('RenderView')
+    # show data in view
+    programmableFilter1Display = Show(programmableFilter1, renderView1)
+
+    # turn off scalar coloring
+    ColorBy(programmableFilter1Display, None)
+
+    Render()
+
+
+
+
+
+
+
 def LoadCameraFile(CameraFilename):
     # heavily based on the code posted here https://www.mail-archive.com/paraview@paraview.org/msg20341.html
 
@@ -574,12 +614,3 @@ def SaveAnimation(OutputFilename, FrameRateVal, MagnificationVal = 1.0, Orientat
     # Create file based on magnification and FrameRate
     WriteAnimation(OutputFilename, Magnification=MagnificationVal, FrameRate=FrameRateVal, Compression=True)
 
-
-def test():
-    print "hello from showdata"
-
-def gettimepoint():
-    animationScene1 = GetAnimationScene()
-    target = int(animationScene1.AnimationTime)
-    print "target is" + str(target)
-    return target

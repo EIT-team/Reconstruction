@@ -1,4 +1,4 @@
-function [ status ] = paraview_showslice( MeshHex,MeshNodes,Data,CameraStr,Centre,Cmap,Cmap_title,SavePath,ReuseVTK,AnimationSavePath,FrameRate)
+function [ status ] = paraview_showslice( MeshHex,MeshNodes,Data,CameraStr,Centre,ReuseVTK,VTKSavePath,Cmap,Cmap_title,AnimationSavePath,FrameRate)
 %PARAVIEW_SHOWSLICE Display data in paraview as a slice. Creates loading script and call
 %paraview with this script at start up. Can save animations and
 %screenshots automatically. Can also load camera file.
@@ -12,7 +12,7 @@ function [ status ] = paraview_showslice( MeshHex,MeshNodes,Data,CameraStr,Centr
 % MeshNodes - from the Mesh_hex standard struc
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
-% SavePath - Path to save the VTK and Python script, temp folder used if
+% VTKSavePath - Path to save the VTK and Python script, temp folder used if
 % not. Can be relative or absolute path. doesnt have to end in .vtk
 % Cmap - colour map range to use, i.e. [-100 100]. If empty -/+ max range is
 % used
@@ -70,7 +70,7 @@ temp_dir=[fileparts(mfilename('fullpath')) filesep 'temp'];
 temp_vtk_name = 'test';
 temp_script_name = 'test.py';
 
-if exist('SavePath','var') == 0 || isempty(SavePath)
+if exist('SavePath','var') == 0 || isempty(VTKSavePath)
     
     fprintf('Saving vtkdata in temp directory\n');
     %if none given use temp directory in recon repo -  this is set to be
@@ -90,13 +90,13 @@ else
     %full relative paths for python script
     
     % make path absolute if not given as such
-    javaFileObj = java.io.File(SavePath);
+    javaFileObj = java.io.File(VTKSavePath);
     
     if ~javaFileObj.isAbsolute()
-        SavePath = fullfile(pwd,SavePath);
+        VTKSavePath = fullfile(pwd,VTKSavePath);
     end
     
-    [Save_root,Save_name] = fileparts(SavePath);
+    [Save_root,Save_name] = fileparts(VTKSavePath);
     script_path = fullfile(Save_root,[Save_name '.py']);
     vtk_path_str = fullfile(Save_root,Save_name);
     fprintf('Saving vtkdata in: %s\n',vtk_path_str);

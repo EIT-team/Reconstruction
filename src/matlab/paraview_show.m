@@ -1,4 +1,4 @@
-function [ status ] = paraview_show( MeshHex,MeshNodes,Data,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,SavePath,ReuseVTK,AnimationSavePath,FrameRate)
+function [ status ] = paraview_show( MeshHex,MeshNodes,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
 %PARAVIEW_SHOW Display data in paraview. Creates loading script and call
 %paraview with this script at start up. Can save animations and
 %screenshots automatically. Can also load camera file.
@@ -12,7 +12,7 @@ function [ status ] = paraview_show( MeshHex,MeshNodes,Data,Thr_Neg,Thr_Pos,Cmap
 % MeshNodes - from the Mesh_hex standard struc
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
-% SavePath - Path to save the VTK and Python script, temp folder used if
+% VTKVTKSavePath - Path to save the VTK and Python script, temp folder used if
 % not. Can be relative or absolute path. doesnt have to end in .vtk
 % Thr_Neg - Threshold to use for negative values. Give either 2 values
 % [-100 -50], or a single value as a coefficient of max. i.e. giving a value
@@ -27,7 +27,7 @@ function [ status ] = paraview_show( MeshHex,MeshNodes,Data,Thr_Neg,Thr_Pos,Cmap
 % end with '.pvcc', i.e. '/iso.pvcc'. Copes with relative or absolute paths
 % ReuseVTK - Flag to save VTKs or not. 0 or empty saves them. 1 resuses
 % them if they exist, throws error if they dont
-% AnimationSavePath - Where to store animations, extensions that work are
+% AnimationVTKSavePath - Where to store animations, extensions that work are
 % .png or .avi. .png used if none given. If empty then not used. Relative
 % and absoluate path work
 % FrameRate - Frame rate for animations. 10 used if not given
@@ -60,7 +60,7 @@ temp_dir=[fileparts(mfilename('fullpath')) filesep 'temp'];
 temp_vtk_name = 'test';
 temp_script_name = 'test.py';
 
-if exist('SavePath','var') == 0 || isempty(SavePath)
+if exist('VTKSavePath','var') == 0 || isempty(VTKSavePath)
     
     fprintf('Saving vtkdata in temp directory\n');
     %if none given use temp directory in recon repo -  this is set to be
@@ -80,13 +80,13 @@ else
     %full relative paths for python script
     
     % make path absolute if not given as such
-    javaFileObj = java.io.File(SavePath);
+    javaFileObj = java.io.File(VTKSavePath);
     
     if ~javaFileObj.isAbsolute()
-        SavePath = fullfile(pwd,SavePath);
+        VTKSavePath = fullfile(pwd,VTKSavePath);
     end
     
-    [Save_root,Save_name] = fileparts(SavePath);
+    [Save_root,Save_name] = fileparts(VTKSavePath);
     script_path = fullfile(Save_root,[Save_name '.py']);
     vtk_path_str = fullfile(Save_root,Save_name);
     fprintf('Saving vtkdata in: %s\n',vtk_path_str);
@@ -278,9 +278,9 @@ end
 
 DoAnimation =1;
 
-if exist('AnimationSavePath','var') == 0 || isempty(AnimationSavePath)
+if exist('AnimationVTKSavePath','var') == 0 || isempty(AnimationVTKSavePath)
     DoAnimation = 0;
-    AnimationSavePath='';
+    AnimationVTKSavePath='';
 end
 if exist('FrameRate','var') == 0 || isempty(FrameRate)
     FrameRate = 10;
@@ -289,14 +289,14 @@ end
 if DoAnimation
     
     % make path absolute if not given as such
-    javaFileObj = java.io.File(AnimationSavePath);
+    javaFileObj = java.io.File(AnimationVTKSavePath);
     
     if ~javaFileObj.isAbsolute()
-        AnimationSavePath = fullfile(pwd,AnimationSavePath);
+        AnimationVTKSavePath = fullfile(pwd,AnimationVTKSavePath);
     end
     
     % make output a png if not given otherwise
-    [AnimationSave_root,AnimationSave_name,AnimationSave_ext] = fileparts(AnimationSavePath);
+    [AnimationSave_root,AnimationSave_name,AnimationSave_ext] = fileparts(AnimationVTKSavePath);
     if isempty(AnimationSave_ext)
         AnimationSave_ext='.png';
         fprintf(2,'NO FILETYPE GIVEN FOR OUTPUT. Using .png\n');

@@ -1,0 +1,41 @@
+import vtk
+import csv
+csvfilename = '../../resources/vtk/testpos.csv'
+input = self.GetInputDataObject(0, 0)
+output = self.GetOutputDataObject(0)
+
+t = self.GetInputDataObject(0,0).GetInformation().Get(vtk.vtkDataObject.DATA_TIME_STEP())
+print t
+TimePoint  = int(t)
+    # read the specific line from the csv file
+Centre = [0.0, 0.0, 0.0]
+count = 0
+
+with open(csvfilename) as f:
+    r = csv.reader(f)
+    for row in r:
+    #print "Current row :" + str(row)
+        if count == TimePoint:
+    #    print "found it"
+            Centre = [float(i) for i in row]
+            break
+        count += 1
+
+    print "Pos is now : " + str(Centre)
+
+
+s = vtk.vtkSphere()
+s.SetCenter(Centre)
+s.SetRadius(10)
+
+print s
+
+clip = vtk.vtkClipDataSet()
+clip.SetInputDataObject(input)
+clip.SetClipFunction(s)
+clip.SetValue(0.0)
+clip.InsideOutOn()
+clip.Update()
+print clip
+
+output.ShallowCopy(clip.GetOutputDataObject(0))

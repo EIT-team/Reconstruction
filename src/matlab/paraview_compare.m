@@ -1,4 +1,4 @@
-function [ status ] = paraview_compare( MeshHex,MeshNodes,Data,CentreToCompare,Radius,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,SavePath,ReuseVTK,AnimationSavePath,FrameRate)
+function [ status ] = paraview_compare( MeshHex,MeshNodes,Data,CentreToCompare,Radius,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationSavePath,FrameRate)
 %PARAVIEW_SHOW Display data in paraview. Creates loading script and call
 %paraview with this script at start up. Can save animations and
 %screenshots automatically. Can also load camera file.
@@ -12,7 +12,7 @@ function [ status ] = paraview_compare( MeshHex,MeshNodes,Data,CentreToCompare,R
 % MeshNodes - from the Mesh_hex standard struc
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
-% SavePath - Path to save the VTK and Python script, temp folder used if
+% VTKSavePath - Path to save the VTK and Python script, temp folder used if
 % not. Can be relative or absolute path. doesnt have to end in .vtk
 % Thr_Neg - Threshold to use for negative values. Give either 2 values
 % [-100 -50], or a single value as a coefficient of max. i.e. giving a value
@@ -59,7 +59,7 @@ else
     if size(CentreToCompare,2) == 3
         
         if size(CentreToCompare,1) == 1
-            CentreToCompare = repmat(CentreToCompare,NumSteps);
+            CentreToCompare = repmat(CentreToCompare,NumSteps,1);
         elseif size(CentreToCompare,1) ~= NumSteps
             error('Number of positions dont match timesteps. Use 1 or NumSteps');
         end
@@ -90,7 +90,7 @@ temp_vtk_name = 'test';
 temp_script_name = 'test.py';
 temp_positioncsv_name = 'testpositions.csv';
 
-if exist('SavePath','var') == 0 || isempty(SavePath)
+if exist('SavePath','var') == 0 || isempty(VTKSavePath)
     
     fprintf('Saving vtkdata in temp directory\n');
     %if none given use temp directory in recon repo -  this is set to be
@@ -111,13 +111,13 @@ else
     %full relative paths for python script
     
     % make path absolute if not given as such
-    javaFileObj = java.io.File(SavePath);
+    javaFileObj = java.io.File(VTKSavePath);
     
     if ~javaFileObj.isAbsolute()
-        SavePath = fullfile(pwd,SavePath);
+        VTKSavePath = fullfile(pwd,VTKSavePath);
     end
     
-    [Save_root,Save_name] = fileparts(SavePath);
+    [Save_root,Save_name] = fileparts(VTKSavePath);
     script_path = fullfile(Save_root,[Save_name '.py']);
     csv_path = fullfile(Save_root,[Save_name '.csv']);
     vtk_path_str = fullfile(Save_root,Save_name);
@@ -396,13 +396,11 @@ if NumSteps == 1
     fprintf(fid,')\n');
 else
     
-    for iStep = 1:NumSteps
-        fprintf(fid,'ShowData.ShowSphereCSV(CSVpath, TimePoint =%d',TimeSteps(iStep)-1);
-        if DoRadius
-            fprintf(fid,', Radius=%.2f ',Radius);
-        end
-        fprintf(fid,')\n');
+    fprintf(fid,'ShowData.ShowSphereCSVClip(Data, CSVpath');
+    if DoRadius
+        fprintf(fid,', Radius=%.2f ',Radius);
     end
+    fprintf(fid,')\n');
 end
 
 
