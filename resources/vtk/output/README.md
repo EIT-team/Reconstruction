@@ -1,0 +1,1 @@
+Example outputs created by load_test_animate
