@@ -576,3 +576,12 @@ def SaveAnimation(OutputFilename, FrameRateVal, MagnificationVal = 1.0, Orientat
     # Create file based on magnification and FrameRate
     WriteAnimation(OutputFilename, Magnification=MagnificationVal, FrameRate=FrameRateVal, Compression=True)
 
+
+def test():
+    print "hello from showdata"
+
+def gettimepoint():
+    animationScene1 = GetAnimationScene()
+    target = int(animationScene1.AnimationTime)
+    print "target is" + str(target)
+    return target
