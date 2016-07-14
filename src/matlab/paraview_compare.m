@@ -63,15 +63,15 @@ else
         elseif size(CentreToCompare,1) ~= NumSteps
             error('Number of positions dont match timesteps. Use 1 or NumSteps');
         end
-            
-        fprintf('Comparing to centres : [%.2f,%.2f,%.2f]\n',CentreToCompare(1),CentreToCompare(2),CentreToCompare(3));
+        
+        fprintf('Comparing to centre(s) : [%.2f,%.2f,%.2f]...\n',CentreToCompare(1,1),CentreToCompare(1,2),CentreToCompare(1,3));
     else
         error('Dont understand centre to compare input');
     end
 end
 
 if exist('Radius','var') == 0 || isempty(Radius)
-    fprintf('Using default radius of 5mm');
+    fprintf('Using default radius of 5mm\n');
     DoRadius = 0;
     Radius=5; %but we just dont set it as use python default
 else
@@ -80,8 +80,6 @@ else
     end
     DoRadius =1;
 end
-
-
 
 
 %% Check where we are saving the data to
@@ -171,7 +169,6 @@ if isempty(MaxNeg)
     MaxNeg =0; % functions below dont like empty values. so set to zero
 end
 
-
 % Default threshold is FWHM in each direction
 if exist('Thr_Neg','var') == 0 || isempty(Thr_Neg)
     %if not given then do defaults
@@ -255,7 +252,7 @@ else
             CameraStr(1)=[];
         end
         DoCamera =1;
-
+        
     else
         fprintf(2,'Didnt understand camera direction, ignoring. Must end with .pvcc to use camera file.\n');
         DoCamera =0;
@@ -344,9 +341,9 @@ if DoAnimation
     animation_path_str = strrep(animation_path_str,'\','/');
     
 end
-%% save positions to CSV file 
+%% save positions to CSV file
 
-%these positions are loaded by python script. 
+%these positions are loaded by python script.
 dlmwrite(csv_path,CentreToCompare);
 
 
@@ -385,13 +382,28 @@ fprintf(fid,'Data = LegacyVTKReader(FileNames=VTK_Filenames)\n');
 %showdata
 fprintf(fid,'ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_title, Bkg_Op)\n');
 
-%create sphere object
-fprintf(fid,'ShowData.ShowSphere(Centre');
 
-if DoRadius
-    fprintf(fid,', Radius=%.2f ',Radius);
+%use single function if just one given
+
+if NumSteps == 1
+    
+    %create sphere object
+    fprintf(fid,'ShowData.ShowSphere(Centre');
+    
+    if DoRadius
+        fprintf(fid,', Radius=%.2f ',Radius);
+    end
+    fprintf(fid,')\n');
+else
+    
+    for iStep = 1:NumSteps
+        fprintf(fid,'ShowData.ShowSphereCSV(CSVpath, TimePoint =%d',TimeSteps(iStep)-1);
+        if DoRadius
+            fprintf(fid,', Radius=%.2f ',Radius);
+        end
+        fprintf(fid,')\n');
+    end
 end
-fprintf(fid,')');
 
 
 %change camera if we want to
