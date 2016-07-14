@@ -3,25 +3,34 @@ function [ status ] = paraview_showslice( MeshHex,MeshNodes,Data,CameraStr,Centr
 %paraview with this script at start up. Can save animations and
 %screenshots automatically. Can also load camera file.
 
-% This has lots of inputs, but only 3 really needed for command window use.
+% This has lots of inputs, but only 5 really needed for command window use.
 % The rest are all needed when you are going to automate creating images or
 % movies.
-
+%
 % Inputs
 % MeshHex - from the Mesh_hex standard struc
 % MeshNodes - from the Mesh_hex standard struc
+%
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
+%
+% Centre - The centre of the slice in [x,y,z]. Must be within mesh or can
+% break
+%
+% CameraStr - set camera to (-/+) X Y or Z directions with a single string
+% i.e. 'x' or '-y' like the GUI in paraview. This also sets the normal of
+% the slice
+%
+% ReuseVTK - Flag to save VTKs or not. 0 or empty saves them. 1 resuses
+% them if they exist, throws error if they dont
+%
 % VTKSavePath - Path to save the VTK and Python script, temp folder used if
 % not. Can be relative or absolute path. doesnt have to end in .vtk
+%
 % Cmap - colour map range to use, i.e. [-100 100]. If empty -/+ max range is
 % used
 % Cmap_title - Text above colourbar
-% CameraStr - set camera to (-/+) X Y or Z directions with a single string
-% i.e. 'x' or '-y' like the GUI in paraview. Or load a camera file, must
-% end with '.pvcc', i.e. '/iso.pvcc'. Copes with relative or absolute paths
-% ReuseVTK - Flag to save VTKs or not. 0 or empty saves them. 1 resuses
-% them if they exist, throws error if they dont
+
 % AnimationSavePath - Where to store animations, extensions that work are
 % .png or .avi. .png used if none given. If empty then not used. Relative
 % and absoluate path work

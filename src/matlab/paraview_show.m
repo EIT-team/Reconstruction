@@ -12,6 +12,8 @@ function [ status ] = paraview_show( MeshHex,MeshNodes,Data,ReuseVTK,VTKSavePath
 % MeshNodes - from the Mesh_hex standard struc
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
+% ReuseVTK - Flag to save VTKs or not. 0 or empty saves them. 1 resuses
+% them if they exist, throws error if they dont
 % VTKVTKSavePath - Path to save the VTK and Python script, temp folder used if
 % not. Can be relative or absolute path. doesnt have to end in .vtk
 % Thr_Neg - Threshold to use for negative values. Give either 2 values
@@ -25,8 +27,6 @@ function [ status ] = paraview_show( MeshHex,MeshNodes,Data,ReuseVTK,VTKSavePath
 % CameraStr - set camera to (-/+) X Y or Z directions with a single string
 % i.e. 'x' or '-y' like the GUI in paraview. Or load a camera file, must
 % end with '.pvcc', i.e. '/iso.pvcc'. Copes with relative or absolute paths
-% ReuseVTK - Flag to save VTKs or not. 0 or empty saves them. 1 resuses
-% them if they exist, throws error if they dont
 % AnimationVTKSavePath - Where to store animations, extensions that work are
 % .png or .avi. .png used if none given. If empty then not used. Relative
 % and absoluate path work
