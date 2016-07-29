@@ -1,4 +1,4 @@
-function [ status ] = paraview_show( MeshHex,MeshNodes,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
+function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
 %PARAVIEW_SHOW Display data in paraview. Creates loading script and call
 %paraview with this script at start up. Can save animations and
 %screenshots automatically. Can also load camera file.
@@ -36,16 +36,37 @@ function [ status ] = paraview_show( MeshHex,MeshNodes,Data,ReuseVTK,VTKSavePath
 
 %% Check inputs
 
+if ~isstruct(MeshStruc)
+    error('Need mesh structure input, with Nodes and Tetra/Hex');
+end
+
+UsingHexes =0;
+
+if (isfield(MeshStruc,'Hex') || isfield(MeshStruc,'Tetra')) && isfield(MeshStruc,'Nodes')
+    
+    if  isfield(MeshStruc,'Hex')
+        UsingHexes =1;
+        NumElements = size(MeshStruc.Hex,1);
+    else
+        NumElements = size(MeshStruc.Tetra,1);
+    end
+    
+else
+    error ('Missing Fields from input mesh structure');
+    
+end
+
+
 %make fake data if none given, use to check mesh etc.
 if exist('Data','var') == 0 || isempty(Data)
     fprintf('No data given, using temp data\n');
-    Data = 1:size(MeshHex,1);
+    Data = 1:NumElements;
     Data = Data - max(Data)/2;
     Data = Data';
 end
 
 %check if mesh and data match etc.
-if size(MeshHex,1) ~= size(Data,1)
+if NumElements ~= size(Data,1)
     error('Size of data and hexes dont match');
 end
 
@@ -220,7 +241,7 @@ else
             CameraStr(1)=[];
         end
         DoCamera =1;
-
+        
     else
         fprintf(2,'Didnt understand camera direction, ignoring. Must end with .pvcc to use camera file.\n');
         DoCamera =0;
@@ -269,7 +290,13 @@ else
     %write all vtks with the correct suffix
     fprintf('Writing VTKs...');
     for iStep = 1:NumSteps
-        writeVTKcell_hex(vtk_path{iStep},MeshHex,MeshNodes,Data(:,iStep),Cmap_name);
+        
+        if UsingHexes
+            writeVTKcell_hex(vtk_path{iStep},MeshStruc.Hex,MeshStruc.Nodes,Data(:,iStep),Cmap_name);
+        else
+            writeVTKcell(vtk_path{iStep},MeshStruc.Tetra,MeshStruc.Nodes,Data(:,iStep),Cmap_name);
+        end
+        
     end
     fprintf('done\n');
 end

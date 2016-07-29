@@ -5,7 +5,7 @@ input = self.GetInputDataObject(0, 0)
 output = self.GetOutputDataObject(0)
 
 t = self.GetInputDataObject(0,0).GetInformation().Get(vtk.vtkDataObject.DATA_TIME_STEP())
-print t
+#print t
 TimePoint  = int(t)
     # read the specific line from the csv file
 Centre = [0.0, 0.0, 0.0]
@@ -28,7 +28,7 @@ s = vtk.vtkSphere()
 s.SetCenter(Centre)
 s.SetRadius(10)
 
-print s
+#print s
 
 clip = vtk.vtkClipDataSet()
 clip.SetInputDataObject(input)

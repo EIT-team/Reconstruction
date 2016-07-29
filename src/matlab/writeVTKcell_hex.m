@@ -20,7 +20,7 @@ end
 [np,dim]=size(Nodes);
 [nt]=size(Hexes,1);
 
-if exist('DataName','var') ==0
+if exist('DataName','var') ==0 || isempty(DataName)
     DataName = 'Data';
 end
 
@@ -49,7 +49,7 @@ fprintf(FID,'CELL_TYPES %d\n',nt);
 s='%d\n';
 fprintf(FID,s,12*ones(nt,1));
 
-fprintf(FID,['CELL_DATA %s\nSCALARS ' DataName ' float 1\nLOOKUP_TABLE default\n'],num2str(nt));
+fprintf(FID,'CELL_DATA %s\nSCALARS %s float 1\nLOOKUP_TABLE default\n',num2str(nt),DataName);
 s='%f\n';
 fprintf(FID,s,Data);
 

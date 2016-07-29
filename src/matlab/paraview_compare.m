@@ -1,4 +1,4 @@
-function [ status ] = paraview_compare( MeshHex,MeshNodes,Data,CentreToCompare,Radius,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationSavePath,FrameRate)
+function [ status ] = paraview_compare( MeshStruc,Data,CentreToCompare,Radius,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationSavePath,FrameRate)
 %PARAVIEW_SHOW Display data in paraview, along with a sphere in the
 %expected position, useful for checking reconstructions
 
@@ -18,7 +18,7 @@ function [ status ] = paraview_compare( MeshHex,MeshNodes,Data,CentreToCompare,R
 % CentreToCompare - [x,y,z] coords of positions you wish to compare to.
 % Rows must equal timesteps, or a single row given, which is duplicated for
 % all timesteps given
-% Radius - 
+% Radius -
 % ReuseVTK - Flag to save VTKs or not. 0 or empty saves them. 1 resuses
 % them if they exist, throws error if they dont
 % VTKSavePath - Path to save the VTK and Python script, temp folder used if
@@ -44,16 +44,35 @@ function [ status ] = paraview_compare( MeshHex,MeshNodes,Data,CentreToCompare,R
 
 %% Check inputs
 
+if ~isstruct(MeshStruc)
+    error('Need mesh structure input, with Nodes and Tetra/Hex');
+end
+
+UsingHexes =0;
+
+if (isfield(MeshStruc,'Hex') || isfield(MeshStruc,'Tetra')) && isfield(MeshStruc,'Nodes')
+    
+    if  isfield(MeshStruc,'Hex')
+        UsingHexes =1;
+        NumElements = size(MeshStruc.Hex,1);
+    else
+        NumElements = size(MeshStruc.Tetra,1);
+    end
+    
+else
+    error ('Missing Fields from input mesh structure');
+end
+
 %make fake data if none given, use to check mesh etc.
 if exist('Data','var') == 0 || isempty(Data)
     fprintf('No data given, using temp data\n');
-    Data = 1:size(MeshHex,1);
+    Data = 1:NumElements;
     Data = Data - max(Data)/2;
     Data = Data';
 end
 
 %check if mesh and data match etc.
-if size(MeshHex,1) ~= size(Data,1)
+if NumElements ~= size(Data,1)
     error('Size of data and hexes dont match');
 end
 
@@ -88,7 +107,6 @@ else
     end
     DoRadius =1;
 end
-
 
 %% Check where we are saving the data to
 %shove it in the temp dir
@@ -309,7 +327,11 @@ else
     %write all vtks with the correct suffix
     fprintf('Writing VTKs...');
     for iStep = 1:NumSteps
-        writeVTKcell_hex(vtk_path{iStep},MeshHex,MeshNodes,Data(:,iStep),Cmap_name);
+        if UsingHexes
+            writeVTKcell_hex(vtk_path{iStep},MeshStruc.Hex,MeshStruc.Nodes,Data(:,iStep),Cmap_name);
+        else
+            writeVTKcell(vtk_path{iStep},MeshStruc.Tetra,MeshStruc.Nodes,Data(:,iStep),Cmap_name);
+        end
     end
     fprintf('done\n');
 end
