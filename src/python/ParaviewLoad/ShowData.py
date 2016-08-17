@@ -509,6 +509,9 @@ def LoadCameraFile(CameraFilename):
     view.CameraParallelScale = CamParallelScale
     view.CenterOfRotation = CamCentreofRot
     view.CameraViewAngle = CamViewAngle
+    Render()
+    #view.ResetCamera()
+    #ResetCamera()
 
 
 def SetCamera(Data, DirectionString):
