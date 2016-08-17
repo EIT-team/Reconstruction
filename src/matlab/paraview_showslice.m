@@ -8,8 +8,7 @@ function [ status ] = paraview_showslice( MeshStruc,Data,CameraStr,Centre,ReuseV
 % movies.
 %
 % Inputs
-% MeshHex - from the Mesh_hex standard struc
-% MeshNodes - from the Mesh_hex standard struc
+% MeshStruc - standard struc - containing Nodes and either Hex or Tetra
 %
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
@@ -85,7 +84,7 @@ else
         fprintf('Using centre : [%.2f,%.2f,%.2f]\n',Centre(1),Centre(2),Centre(3));
     else
         DoCentre =0;
-        fprintf(2,'Dont understand centre input. Using default');
+        fprintf(2,'Dont understand centre input. Using default\n');
     end
 end
 
@@ -348,7 +347,7 @@ fprintf(fid,'\n');
 fclose(fid);
 
 %% call paraview with this new script
-
+fprintf('Opening Paraview...\n');
 cmdstr=sprintf('paraview --script=%s &',script_path);
 
 [status, cmdout] = system(cmdstr,'-echo');

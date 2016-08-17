@@ -11,8 +11,7 @@ function [ status ] = paraview_compare( MeshStruc,Data,CentreToCompare,Radius,Re
 % movies.
 
 % Inputs
-% MeshHex - from the Mesh_hex standard struc
-% MeshNodes - from the Mesh_hex standard struc
+% MeshStruc - standard struc - containing Nodes and either Hex or Tetra
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
 % CentreToCompare - [x,y,z] coords of positions you wish to compare to.
@@ -201,9 +200,13 @@ if exist('Thr_Neg','var') == 0 || isempty(Thr_Neg)
     Thr_Neg =[MaxNeg, MaxNeg/2];
 else % if 2 given then use these explicit values
     if length(Thr_Neg) == 1
-        %only 1 given then take this as a coefficient - i.e. 0.5 is full
-        %width half max. 0.3 is full width third max etc.
-        Thr_Neg = [MaxNeg, (1-abs(Thr_Neg))*MaxNeg];
+        if Thr_Neg
+            %only 1 given then take this as a coefficient - i.e. 0.5 is full
+            %width half max. 0.3 is full width third max etc.
+            Thr_Neg = [MaxNeg, (1-abs(Thr_Neg))*MaxNeg];
+        else
+            Thr_Neg = [0 0];
+        end
     end
 end
 
@@ -218,9 +221,13 @@ if exist('Thr_Pos','var') == 0 || isempty(Thr_Pos)
     Thr_Pos =[MaxPos/2, MaxPos];
 else % if 2 given then use these explicit values
     if length(Thr_Pos) == 1
-        %only 1 given then take this as a coefficient - i.e. 0.5 is full
-        %width half max. 0.3 is full width third max etc.
-        Thr_Pos = [(1-abs(Thr_Pos))*MaxPos, MaxPos];
+        if Thr_Pos
+            %only 1 given then take this as a coefficient - i.e. 0.5 is full
+            %width half max. 0.3 is full width third max etc.
+            Thr_Pos = [(1-abs(Thr_Pos))*MaxPos, MaxPos];
+        else
+            Thr_Pos = [0 0];
+        end
     end
 end
 

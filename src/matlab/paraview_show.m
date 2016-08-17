@@ -8,8 +8,7 @@ function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg
 % movies.
 
 % Inputs
-% MeshHex - from the Mesh_hex standard struc
-% MeshNodes - from the Mesh_hex standard struc
+% MeshStruc - standard struc - containing Nodes and either Hex or Tetra
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
 % ReuseVTK - Flag to save VTKs or not. 0 or empty saves them. 1 resuses
@@ -36,14 +35,16 @@ function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg
 
 %% Check inputs
 
+%should be usual Mesh structure
 if ~isstruct(MeshStruc)
     error('Need mesh structure input, with Nodes and Tetra/Hex');
 end
 
+% check we have node coordinates in Nodes, and either Hex or Tetra refences
 UsingHexes =0;
 
 if (isfield(MeshStruc,'Hex') || isfield(MeshStruc,'Tetra')) && isfield(MeshStruc,'Nodes')
-    
+    % get the number of elements
     if  isfield(MeshStruc,'Hex')
         UsingHexes =1;
         NumElements = size(MeshStruc.Hex,1);
@@ -53,9 +54,7 @@ if (isfield(MeshStruc,'Hex') || isfield(MeshStruc,'Tetra')) && isfield(MeshStruc
     
 else
     error ('Missing Fields from input mesh structure');
-    
 end
-
 
 %make fake data if none given, use to check mesh etc.
 if exist('Data','var') == 0 || isempty(Data)
@@ -164,9 +163,13 @@ if exist('Thr_Neg','var') == 0 || isempty(Thr_Neg)
     Thr_Neg =[MaxNeg, MaxNeg/2];
 else % if 2 given then use these explicit values
     if length(Thr_Neg) == 1
-        %only 1 given then take this as a coefficient - i.e. 0.5 is full
-        %width half max. 0.3 is full width third max etc.
-        Thr_Neg = [MaxNeg, (1-abs(Thr_Neg))*MaxNeg];
+        if Thr_Neg
+            %only 1 given then take this as a coefficient - i.e. 0.5 is full
+            %width half max. 0.3 is full width third max etc.
+            Thr_Neg = [MaxNeg, (1-abs(Thr_Neg))*MaxNeg];
+        else
+            Thr_Neg = [0 0];
+        end
     end
 end
 
@@ -181,9 +184,13 @@ if exist('Thr_Pos','var') == 0 || isempty(Thr_Pos)
     Thr_Pos =[MaxPos/2, MaxPos];
 else % if 2 given then use these explicit values
     if length(Thr_Pos) == 1
-        %only 1 given then take this as a coefficient - i.e. 0.5 is full
-        %width half max. 0.3 is full width third max etc.
-        Thr_Pos = [(1-abs(Thr_Pos))*MaxPos, MaxPos];
+        if Thr_Pos
+            %only 1 given then take this as a coefficient - i.e. 0.5 is full
+            %width half max. 0.3 is full width third max etc.
+            Thr_Pos = [(1-abs(Thr_Pos))*MaxPos, MaxPos];
+        else
+            Thr_Pos = [0 0];
+        end
     end
 end
 
@@ -309,6 +316,7 @@ if exist('AnimationVTKSavePath','var') == 0 || isempty(AnimationVTKSavePath)
     DoAnimation = 0;
     AnimationVTKSavePath='';
 end
+%set default frame rate, this is meaningless for pngs by themselves
 if exist('FrameRate','var') == 0 || isempty(FrameRate)
     FrameRate = 10;
 end
@@ -332,7 +340,7 @@ if DoAnimation
     %make a pythony path string
     animation_path_str = fullfile(AnimationSave_root,[AnimationSave_name AnimationSave_ext]);
     fprintf('Saving output to file(s) : %s\n',animation_path_str);
-    
+    %adjust path string again to make paraview happy
     animation_path_str = strrep(animation_path_str,'\','/');
     
 end
@@ -376,7 +384,7 @@ elseif DoCamera == 2 % using a file previously saved
     fprintf(fid,'ShowData.LoadCameraFile(''%s'')\n',Camera_path_str);
 end
 
-
+%create animation if we want to
 if DoAnimation
     fprintf(fid,'ShowData.SaveAnimation(''%s'', %d)',animation_path_str,FrameRate);
 end
@@ -387,6 +395,7 @@ fclose(fid);
 
 %% call paraview with this new script
 
+fprintf('Opening Paraview...\n');
 cmdstr=sprintf('paraview --script=%s &',script_path);
 
 [status, cmdout] = system(cmdstr,'-echo');
