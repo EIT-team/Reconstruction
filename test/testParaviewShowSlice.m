@@ -139,7 +139,6 @@ if ispc
     system('taskkill /IM paraview.exe');
 end
 
-
 %% test centre
 PertLocPos = [ -33 -141 510; -60 -141 510; -10 -110 540];
 PertLocPos = [ 0 0.7 0.5; 0 0.6 0.50; 0 0.5 0.5];
@@ -184,7 +183,6 @@ pause(5);
 if ispc
     system('taskkill /IM paraview.exe');
 end
-
 
 %% test vtk path
 try
@@ -237,7 +235,6 @@ pause(5);
 if ispc
     system('taskkill /IM paraview.exe');
 end
-
 
 %% test cmap
 
@@ -320,10 +317,7 @@ if ispc
     system('taskkill /IM paraview.exe');
 end
 
-
 %% END
-
-
 
 if Failed
     fprintf(2,'BOOO FAILED \n');

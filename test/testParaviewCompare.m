@@ -83,7 +83,6 @@ if ispc
     system('taskkill /IM paraview.exe');
 end
 
-
 %% test vtk path
 try
     c=paraview_compare(Mesh_hex,Data_hex,PertLocHex,10,[],temp_name);
@@ -306,10 +305,7 @@ if ispc
     system('taskkill /IM paraview.exe');
 end
 
-
 %% END
-
-
 
 if Failed
     fprintf(2,'BOOO FAILED \n');

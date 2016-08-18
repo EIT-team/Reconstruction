@@ -432,10 +432,7 @@ if ispc
     system('taskkill /IM paraview.exe');
 end
 
-
 %% END
-
-
 
 if Failed
     fprintf(2,'BOOO FAILED \n');

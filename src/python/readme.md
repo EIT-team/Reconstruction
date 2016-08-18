@@ -11,7 +11,7 @@ You should be able to call `paraview` from the command line. Sort that out first
 ## Errors...
 I find the best way to view the errors, is not through the initial window which paraview pops up, but through the python shell. I have tried to make the output verbose enough to see whats going on.
 
-Things are a little hard to debug as I couldnt get a normal python IDE to find all of the libraries which paraview can find, specifcally `LegacyVTKReader`. So I could only run the code through invoking paraview from the command line as below.
+Things are a little hard to debug as I couldnt get a normal python IDE to find all of the libraries which paraview can find, specifically `LegacyVTKReader`. So I could only run the code through invoking paraview from the command line as below.
 
 
 ## Example scripts

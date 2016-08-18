@@ -1,16 +1,22 @@
 function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
-%PARAVIEW_SHOW Display data in paraview. Creates loading script and call
-%paraview with this script at start up. Can save animations and
-%screenshots automatically. Can also load camera file.
+%PARAVIEW_SHOW Display data in paraview, with transparent background, and Thresholds, with even colourbars.
+%Creates loading script and call paraview with this script at start up. 
+%Can save animations and screenshots automatically. Can also load camera file. 
+%Paraview and this python library must be added to path.
 
-% This has lots of inputs, but only 3 really needed for command window use.
-% The rest are all needed when you are going to automate creating images or
-% movies.
+% This has lots of inputs, but only the first two are  really needed for command window use.
+% The rest are all needed when you are going to automate creating images or movies.
 
 % Inputs
+
+% Main two are:
+
 % MeshStruc - standard struc - containing Nodes and either Hex or Tetra
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
+
+% Manually setting parameters, and saving images/movies automatically:
+
 % ReuseVTK - Flag to save VTKs or not. 0 or empty saves them. 1 resuses
 % them if they exist, throws error if they dont
 % VTKVTKSavePath - Path to save the VTK and Python script, temp folder used if
@@ -21,7 +27,7 @@ function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg
 % to disable.
 % Thr_Pos - As above but with positive values
 % Cmap - colour map range to use, i.e. [-100 100]. If empty -/+ max range is
-% used
+% used i.e. centred around 0
 % Cmap_title - Text above colourbar
 % CameraStr - set camera to (-/+) X Y or Z directions with a single string
 % i.e. 'x' or '-y' like the GUI in paraview. Or load a camera file, must
@@ -31,7 +37,27 @@ function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg
 % and absoluate path work
 % FrameRate - Frame rate for animations. 10 used if not given
 
-% example usages....
+% Examples for Normal use:
+
+% Display Full Width Half Max threshold for Postive and Negative Data, in
+% mesh with transparent background, with colour bar range set to -/+ max :
+
+% e.g. load the mesh /resources/mesh/Neonate_hex_lowres.mat and data /resources/data/Neonate_hex_lowres_example.mat
+
+% 1. Test the mesh is ok - generates dummy data
+% paraview_show(Mesh_hex);
+
+% 2. load single recon data - as a single timepoint
+% paraview_show(Mesh_hex,Data_hex(:,1));
+
+% 2. load multiple timepoints of data - skip through timesteps to see each
+% position
+% paraview_show(Mesh_hex,Data_hex);
+
+% Examples when automating making images are found in the TestParaviewShow
+
+
+
 
 %% Check inputs
 
@@ -129,7 +155,7 @@ vtk_path_python = strrep(vtk_path,'\','/');
 
 %check if passed or calculate
 
-%This is the colorbar legend, separate so we can have longer text
+%This is the colourbar legend, separate so we can have longer text
 
 if exist('Cmap_title','var') == 0 || isempty(Cmap_title)
     Cmap_title = 'SigmaProbably';
@@ -138,7 +164,7 @@ end
 % Find max of dataset rounded up
 MaxinData = ceil(max(max(abs(Data))));
 
-%sets the range of the colormap
+%sets the range of the colourmap
 if exist('Cmap','var') == 0 || isempty(Cmap)
     %if not given then take default which is centred at 0
     Cmap = [-MaxinData, MaxinData];
