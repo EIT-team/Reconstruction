@@ -459,7 +459,7 @@ fclose(fid);
 
 %% call paraview with this new script
 
-cmdstr=sprintf('paraview --script=%s &',script_path);
+cmdstr=sprintf('paraview --script="%s" &',script_path);
 
 [status, cmdout] = system(cmdstr,'-echo');
 
