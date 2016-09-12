@@ -16,6 +16,7 @@ classdef tikhonov_object < handle
     
     properties (Hidden = true)
         
+        
         JJinv_CV_sets
         U
         S
