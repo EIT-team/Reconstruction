@@ -1,22 +1,24 @@
 function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
 %PARAVIEW_SHOW Display data in paraview, with transparent background, and Thresholds, with even colourbars.
+% paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
+%
 %Creates loading script and call paraview with this script at start up. 
 %Can save animations and screenshots automatically. Can also load camera file. 
 %Paraview and this python library must be added to path.
-
+%
 % This has lots of inputs, but only the first two are  really needed for command window use.
 % The rest are all needed when you are going to automate creating images or movies.
-
+%
 % Inputs
-
+%
 % Main two are:
-
+%
 % MeshStruc - standard struc - containing Nodes and either Hex or Tetra
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
-
+%
 % Manually setting parameters, and saving images/movies automatically:
-
+%
 % ReuseVTK - Flag to save VTKs or not. 0 or empty saves them. 1 resuses
 % them if they exist, throws error if they dont
 % VTKVTKSavePath - Path to save the VTK and Python script, temp folder used if
@@ -36,25 +38,27 @@ function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg
 % .png or .avi. .png used if none given. If empty then not used. Relative
 % and absoluate path work
 % FrameRate - Frame rate for animations. 10 used if not given
-
+%
 % Examples for Normal use:
-
+%
 % Display Full Width Half Max threshold for Postive and Negative Data, in
 % mesh with transparent background, with colour bar range set to -/+ max :
-
+%
 % e.g. load the mesh /resources/mesh/Neonate_hex_lowres.mat and data /resources/data/Neonate_hex_lowres_example.mat
-
+%
 % 1. Test the mesh is ok - generates dummy data
 % paraview_show(Mesh_hex);
-
+%
 % 2. load single recon data - as a single timepoint
 % paraview_show(Mesh_hex,Data_hex(:,1));
-
+%
 % 2. load multiple timepoints of data - skip through timesteps to see each
 % position
 % paraview_show(Mesh_hex,Data_hex);
-
+%
 % Examples when automating making images are found in the TestParaviewShow
+%paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
+
 
 
 

@@ -99,7 +99,7 @@ temp_dir=[fileparts(mfilename('fullpath')) filesep 'temp'];
 temp_vtk_name = 'test';
 temp_script_name = 'test.py';
 
-if exist('SavePath','var') == 0 || isempty(VTKSavePath)
+if exist('VTKSavePath','var') == 0 || isempty(VTKSavePath)
     
     fprintf('Saving vtkdata in temp directory\n');
     %if none given use temp directory in recon repo -  this is set to be
