@@ -1,12 +1,12 @@
 %these relative paths only work on windows I think...
 
-addpath('../src/matlab');
-
+%addpath('../src/matlab');
+Failed = 0;
 
 load('../resources/mesh/Ex_Cyl_Small.mat'); %load the Mesh and the Jacobian (from fwd solver), and the boundary votlages DV
+load('reconTestData.mat');
 
-[h]=DisplayBoundaries(Mesh);
-
+tol = 1e-14;
 
 
 %create hex mesh and hex jacobian - 10mm elements
@@ -27,8 +27,18 @@ lambda = logspace(-20,-2,nLambda);
 [X,cv_error] = tikhonov_CV(J_hex,DV,lambda,n_J,U,S,V,0);% DV is the measurement.
 disp(sprintf('X done: %.2f min.',toc/60));
 
+% Check we get right value of X
+try
+assert( max(abs(X-X_test)) < tol)
+catch
+    disp('Recon test error')
+    Failed = 1;
+end
 
+if Failed
+     exit(1)
+end
 %% make vtk
 
 %write VTK file to view in paraview
-writeVTKcell_hex('CylTest',Mesh_hex.Hex,Mesh_hex.Nodes,X);
+%writeVTKcell_hex('CylTest',Mesh_hex.Hex,Mesh_hex.Nodes,X);

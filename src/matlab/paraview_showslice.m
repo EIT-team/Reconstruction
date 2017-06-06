@@ -1,4 +1,4 @@
-function [ status ] = paraview_showslice( MeshHex,MeshNodes,Data,CameraStr,Centre,ReuseVTK,VTKSavePath,Cmap,Cmap_title,AnimationSavePath,FrameRate)
+function [ status ] = paraview_showslice( MeshStruc,Data,CameraStr,Centre,ReuseVTK,VTKSavePath,Cmap,Cmap_title,AnimationSavePath,FrameRate)
 %PARAVIEW_SHOWSLICE Display data in paraview as a slice. Creates loading script and call
 %paraview with this script at start up. Can save animations and
 %screenshots automatically. Can also load camera file.
@@ -8,8 +8,7 @@ function [ status ] = paraview_showslice( MeshHex,MeshNodes,Data,CameraStr,Centr
 % movies.
 %
 % Inputs
-% MeshHex - from the Mesh_hex standard struc
-% MeshNodes - from the Mesh_hex standard struc
+% MeshStruc - standard struc - containing Nodes and either Hex or Tetra
 %
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
@@ -40,20 +39,41 @@ function [ status ] = paraview_showslice( MeshHex,MeshNodes,Data,CameraStr,Centr
 
 %% Check inputs
 
+if ~isstruct(MeshStruc)
+    error('Need mesh structure input, with Nodes and Tetra/Hex');
+end
+
+UsingHexes =0;
+
+if (isfield(MeshStruc,'Hex') || isfield(MeshStruc,'Tetra')) && isfield(MeshStruc,'Nodes')
+    
+    if  isfield(MeshStruc,'Hex')
+        UsingHexes =1;
+        NumElements = size(MeshStruc.Hex,1);
+    else
+        NumElements = size(MeshStruc.Tetra,1);
+    end
+    
+else
+    error ('Missing Fields from input mesh structure');
+    
+end
+
+
 %make fake data if none given, use to check mesh etc.
 if exist('Data','var') == 0 || isempty(Data)
     fprintf('No data given, using temp data\n');
-    Data = 1:size(MeshHex,1);
+    Data = 1:NumElements;
     Data = Data - max(Data)/2;
     Data = Data';
 end
 
 %check if mesh and data match etc.
-if size(MeshHex,1) ~= size(Data,1)
+if NumElements ~= size(Data,1)
     error('Size of data and hexes dont match');
 end
 
-%check if centre given - pyuthon script will take centre of mesh if not
+%check if centre given - python script will take centre of mesh if not
 %given
 if exist('Centre','var') == 0 || isempty(Centre)
     fprintf('No centre given, using centre of mesh\n');
@@ -64,7 +84,7 @@ else
         fprintf('Using centre : [%.2f,%.2f,%.2f]\n',Centre(1),Centre(2),Centre(3));
     else
         DoCentre =0;
-        fprintf(2,'Dont understand centre input. Using default');
+        fprintf(2,'Dont understand centre input. Using default\n');
     end
 end
 
@@ -199,7 +219,7 @@ end
 %output to user
 
 if DoColourMap
-fprintf('Values used: Cmap=[%d,%d] ', Cmap(1),Cmap(2));
+    fprintf('Values used: Cmap=[%d,%d] ', Cmap(1),Cmap(2));
 else
     fprintf('Setting colourmap based on range in slice');
 end
@@ -231,7 +251,11 @@ else
     %write all vtks with the correct suffix
     fprintf('Writing VTKs...');
     for iStep = 1:NumSteps
-        writeVTKcell_hex(vtk_path{iStep},MeshHex,MeshNodes,Data(:,iStep),Cmap_name);
+        if UsingHexes
+            writeVTKcell_hex(vtk_path{iStep},MeshStruc.Hex,MeshStruc.Nodes,Data(:,iStep),Cmap_name);
+        else
+            writeVTKcell(vtk_path{iStep},MeshStruc.Tetra,MeshStruc.Nodes,Data(:,iStep),Cmap_name);
+        end
     end
     fprintf('done\n');
 end
@@ -323,8 +347,8 @@ fprintf(fid,'\n');
 fclose(fid);
 
 %% call paraview with this new script
-
-cmdstr=sprintf('paraview --script=%s &',script_path);
+fprintf('Opening Paraview...\n');
+cmdstr=sprintf('paraview --script="%s" &',script_path);
 
 [status, cmdout] = system(cmdstr,'-echo');
 

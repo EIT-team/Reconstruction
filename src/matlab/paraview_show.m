@@ -1,17 +1,22 @@
-function [ status ] = paraview_show( MeshHex,MeshNodes,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
-%PARAVIEW_SHOW Display data in paraview. Creates loading script and call
-%paraview with this script at start up. Can save animations and
-%screenshots automatically. Can also load camera file.
+function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
+%PARAVIEW_SHOW Display data in paraview, with transparent background, and Thresholds, with even colourbars.
+%Creates loading script and call paraview with this script at start up. 
+%Can save animations and screenshots automatically. Can also load camera file. 
+%Paraview and this python library must be added to path.
 
-% This has lots of inputs, but only 3 really needed for command window use.
-% The rest are all needed when you are going to automate creating images or
-% movies.
+% This has lots of inputs, but only the first two are  really needed for command window use.
+% The rest are all needed when you are going to automate creating images or movies.
 
 % Inputs
-% MeshHex - from the Mesh_hex standard struc
-% MeshNodes - from the Mesh_hex standard struc
+
+% Main two are:
+
+% MeshStruc - standard struc - containing Nodes and either Hex or Tetra
 % Data - data to write Hex x Timesteps. If none given then dummy array
 % created
+
+% Manually setting parameters, and saving images/movies automatically:
+
 % ReuseVTK - Flag to save VTKs or not. 0 or empty saves them. 1 resuses
 % them if they exist, throws error if they dont
 % VTKVTKSavePath - Path to save the VTK and Python script, temp folder used if
@@ -22,7 +27,7 @@ function [ status ] = paraview_show( MeshHex,MeshNodes,Data,ReuseVTK,VTKSavePath
 % to disable.
 % Thr_Pos - As above but with positive values
 % Cmap - colour map range to use, i.e. [-100 100]. If empty -/+ max range is
-% used
+% used i.e. centred around 0
 % Cmap_title - Text above colourbar
 % CameraStr - set camera to (-/+) X Y or Z directions with a single string
 % i.e. 'x' or '-y' like the GUI in paraview. Or load a camera file, must
@@ -32,20 +37,61 @@ function [ status ] = paraview_show( MeshHex,MeshNodes,Data,ReuseVTK,VTKSavePath
 % and absoluate path work
 % FrameRate - Frame rate for animations. 10 used if not given
 
-% example usages....
+% Examples for Normal use:
+
+% Display Full Width Half Max threshold for Postive and Negative Data, in
+% mesh with transparent background, with colour bar range set to -/+ max :
+
+% e.g. load the mesh /resources/mesh/Neonate_hex_lowres.mat and data /resources/data/Neonate_hex_lowres_example.mat
+
+% 1. Test the mesh is ok - generates dummy data
+% paraview_show(Mesh_hex);
+
+% 2. load single recon data - as a single timepoint
+% paraview_show(Mesh_hex,Data_hex(:,1));
+
+% 2. load multiple timepoints of data - skip through timesteps to see each
+% position
+% paraview_show(Mesh_hex,Data_hex);
+
+% Examples when automating making images are found in the TestParaviewShow
+
+
+
 
 %% Check inputs
+
+%should be usual Mesh structure
+if ~isstruct(MeshStruc)
+    error('Need mesh structure input, with Nodes and Tetra/Hex');
+end
+
+% check we have node coordinates in Nodes, and either Hex or Tetra refences
+UsingHexes =0;
+
+if (isfield(MeshStruc,'Hex') || isfield(MeshStruc,'Tetra')) && isfield(MeshStruc,'Nodes')
+    % get the number of elements
+    if  isfield(MeshStruc,'Hex')
+        UsingHexes =1;
+        NumElements = size(MeshStruc.Hex,1);
+    else
+        NumElements = size(MeshStruc.Tetra,1);
+    end
+    
+else
+    error ('Missing Fields from input mesh structure');
+end
 
 %make fake data if none given, use to check mesh etc.
 if exist('Data','var') == 0 || isempty(Data)
     fprintf('No data given, using temp data\n');
-    Data = 1:size(MeshHex,1);
+    Data = 1:NumElements;
     Data = Data - max(Data)/2;
     Data = Data';
 end
 
 %check if mesh and data match etc.
-if size(MeshHex,1) ~= size(Data,1)
+if NumElements ~= size(Data,1)
     error('Size of data and hexes dont match');
 end
 
@@ -109,7 +155,7 @@ vtk_path_python = strrep(vtk_path,'\','/');
 
 %check if passed or calculate
 
-%This is the colorbar legend, separate so we can have longer text
+%This is the colourbar legend, separate so we can have longer text
 
 if exist('Cmap_title','var') == 0 || isempty(Cmap_title)
     Cmap_title = 'SigmaProbably';
@@ -118,7 +164,7 @@ end
 % Find max of dataset rounded up
 MaxinData = ceil(max(max(abs(Data))));
 
-%sets the range of the colormap
+%sets the range of the colourmap
 if exist('Cmap','var') == 0 || isempty(Cmap)
     %if not given then take default which is centred at 0
     Cmap = [-MaxinData, MaxinData];
@@ -143,9 +189,13 @@ if exist('Thr_Neg','var') == 0 || isempty(Thr_Neg)
     Thr_Neg =[MaxNeg, MaxNeg/2];
 else % if 2 given then use these explicit values
     if length(Thr_Neg) == 1
-        %only 1 given then take this as a coefficient - i.e. 0.5 is full
-        %width half max. 0.3 is full width third max etc.
-        Thr_Neg = [MaxNeg, (1-abs(Thr_Neg))*MaxNeg];
+        if Thr_Neg
+            %only 1 given then take this as a coefficient - i.e. 0.5 is full
+            %width half max. 0.3 is full width third max etc.
+            Thr_Neg = [MaxNeg, (1-abs(Thr_Neg))*MaxNeg];
+        else
+            Thr_Neg = [0 0];
+        end
     end
 end
 
@@ -160,9 +210,13 @@ if exist('Thr_Pos','var') == 0 || isempty(Thr_Pos)
     Thr_Pos =[MaxPos/2, MaxPos];
 else % if 2 given then use these explicit values
     if length(Thr_Pos) == 1
-        %only 1 given then take this as a coefficient - i.e. 0.5 is full
-        %width half max. 0.3 is full width third max etc.
-        Thr_Pos = [(1-abs(Thr_Pos))*MaxPos, MaxPos];
+        if Thr_Pos
+            %only 1 given then take this as a coefficient - i.e. 0.5 is full
+            %width half max. 0.3 is full width third max etc.
+            Thr_Pos = [(1-abs(Thr_Pos))*MaxPos, MaxPos];
+        else
+            Thr_Pos = [0 0];
+        end
     end
 end
 
@@ -220,7 +274,7 @@ else
             CameraStr(1)=[];
         end
         DoCamera =1;
-
+        
     else
         fprintf(2,'Didnt understand camera direction, ignoring. Must end with .pvcc to use camera file.\n');
         DoCamera =0;
@@ -269,7 +323,13 @@ else
     %write all vtks with the correct suffix
     fprintf('Writing VTKs...');
     for iStep = 1:NumSteps
-        writeVTKcell_hex(vtk_path{iStep},MeshHex,MeshNodes,Data(:,iStep),Cmap_name);
+        
+        if UsingHexes
+            writeVTKcell_hex(vtk_path{iStep},MeshStruc.Hex,MeshStruc.Nodes,Data(:,iStep),Cmap_name);
+        else
+            writeVTKcell(vtk_path{iStep},MeshStruc.Tetra,MeshStruc.Nodes,Data(:,iStep),Cmap_name);
+        end
+        
     end
     fprintf('done\n');
 end
@@ -282,6 +342,7 @@ if exist('AnimationVTKSavePath','var') == 0 || isempty(AnimationVTKSavePath)
     DoAnimation = 0;
     AnimationVTKSavePath='';
 end
+%set default frame rate, this is meaningless for pngs by themselves
 if exist('FrameRate','var') == 0 || isempty(FrameRate)
     FrameRate = 10;
 end
@@ -305,7 +366,7 @@ if DoAnimation
     %make a pythony path string
     animation_path_str = fullfile(AnimationSave_root,[AnimationSave_name AnimationSave_ext]);
     fprintf('Saving output to file(s) : %s\n',animation_path_str);
-    
+    %adjust path string again to make paraview happy
     animation_path_str = strrep(animation_path_str,'\','/');
     
 end
@@ -349,7 +410,7 @@ elseif DoCamera == 2 % using a file previously saved
     fprintf(fid,'ShowData.LoadCameraFile(''%s'')\n',Camera_path_str);
 end
 
-
+%create animation if we want to
 if DoAnimation
     fprintf(fid,'ShowData.SaveAnimation(''%s'', %d)',animation_path_str,FrameRate);
 end
@@ -360,7 +421,8 @@ fclose(fid);
 
 %% call paraview with this new script
 
-cmdstr=sprintf('paraview --script=%s &',script_path);
+fprintf('Opening Paraview...\n');
+cmdstr=sprintf('paraview --script="%s" &',script_path);
 
 [status, cmdout] = system(cmdstr,'-echo');
 

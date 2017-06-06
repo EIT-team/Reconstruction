@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 
 
 def ShowThresholdData(Data, ColourMapRange = None, NegativeThresholdValues = None, PositiveThresholdValues = None, ColourMapLegend = 'Sigma', BackgroundOpacityValue = 0.1, ScalarBarPos = None):
+    #  create positive and negative thresholds of given data
 
     ##### DEFAULTS
     DefaultColorMap = 0
@@ -175,6 +176,7 @@ def ShowThresholdData(Data, ColourMapRange = None, NegativeThresholdValues = Non
 
 
 def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, ColourMapLegend = 'SigmaProbably', ScalarBarPos = None):
+    # make slice in Data of given direction
 
     #### DEFAULTS
 
@@ -358,7 +360,7 @@ def ShowSliceData(Data, DirectionString, Centre = None, ColourMapRange = None, C
 
 
 def ShowSphere(Centre, Radius = None, Name = 'ExPosition'):
-
+    # create a sphere source at a given position
     if Radius is None:
         Radius = 5
 
@@ -383,6 +385,7 @@ def ShowSphere(Centre, Radius = None, Name = 'ExPosition'):
 
 def ShowSphereCSV(CSVfile, Radius = None, TimePoint = None, Name_prefix = None):
     # show a spehere based on position in a csv file
+
     # convert to absolute path
     CSVfile = os.path.abspath(CSVfile)
 
@@ -504,6 +507,9 @@ def LoadCameraFile(CameraFilename):
     view.CameraParallelScale = CamParallelScale
     view.CenterOfRotation = CamCentreofRot
     view.CameraViewAngle = CamViewAngle
+    Render()
+    #view.ResetCamera()
+    #ResetCamera()
 
 
 def SetCamera(Data, DirectionString):
