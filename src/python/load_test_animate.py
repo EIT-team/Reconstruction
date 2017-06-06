@@ -18,8 +18,10 @@ VTK_Filenames=ShowData.ConvertFilenames(VTKnames)
 
 Data = LegacyVTKReader(FileNames=VTK_Filenames)
 
-ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Cmap_title, Bkg_Op)
+ShowData.ShowThresholdData(Data, Cmap, Thr_Neg, Thr_Pos, Cmap_name, Bkg_Op)
 
 ShowData.SaveAnimation('../../resources/vtk/output/example.png', 5, 2)
 
-ShowData.SaveAnimation('../../resources/vtk/output/example.avi', 5)
+ShowData.SaveGif('../../resources/vtk/output/example.png', 5)
+
+ShowData.SaveVideo('../../resources/vtk/output/example.png', 5)
