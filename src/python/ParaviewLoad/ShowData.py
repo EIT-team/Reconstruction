@@ -414,7 +414,7 @@ def ShowSphereCSV(CSVfile, Radius = None, TimePoint = None, Name_prefix = None):
             count += 1
 
     print "Pos is now : " + str(Centre)
-    
+
     # make sphere with this centre
     ShowSphere(Centre, Radius, Name_prefix + str(TimePoint))
 
@@ -425,7 +425,7 @@ def ShowSphereCSVClip(Data,CSVfile, Radius = None, Name = None):
 
     CSVfile = CSVfile.replace('\\', '/')
 
-    print "filename is" + str(CSVfile)
+    print "filename is " + str(CSVfile)
 
     if Radius is None:
         Radius = 5
@@ -452,11 +452,6 @@ def ShowSphereCSVClip(Data,CSVfile, Radius = None, Name = None):
     ColorBy(programmableFilter1Display, None)
 
     Render()
-
-
-
-
-
 
 
 def LoadCameraFile(CameraFilename):
@@ -598,15 +593,15 @@ def SetCamera(Data, DirectionString):
 def ConvertFilenames(Filenames_input):
 
     if type(Filenames_input) == list:
-        VTK_Filenames = Filenames_input
+        full_filenames = Filenames_input
         for iName in range(len(Filenames_input)):
             # print iName
-            VTK_Filenames[iName] = os.path.abspath(Filenames_input[iName])
-        print VTK_Filenames
+            full_filenames[iName] = os.path.abspath(Filenames_input[iName])
+        print full_filenames
     else:
-        VTK_Filenames = os.path.abspath(Filenames_input)
+        full_filenames = os.path.abspath(Filenames_input)
 
-    return VTK_Filenames
+    return full_filenames
 
 
 def SaveAnimation(OutputFilename, FrameRateVal, MagnificationVal = 1.0, OrientationAxisVisible = 0):
@@ -619,4 +614,57 @@ def SaveAnimation(OutputFilename, FrameRateVal, MagnificationVal = 1.0, Orientat
     OutputFilename=ConvertFilenames(OutputFilename)
     # Create file based on magnification and FrameRate
     WriteAnimation(OutputFilename, Magnification=MagnificationVal, FrameRate=FrameRateVal, Compression=True)
+    view.ResetCamera()
+    Render()
+    # Make it create the scene
+    Render()
 
+def SaveGif(PngName, FrameRate):
+
+    # graphicsmagick uses "ticks" of 10ms when making gif, so we need to convert from frame rate to this
+    gif_delay = int(round((1.0 / FrameRate) * 100.0, 0))  # rounding to nearest int
+
+    # get the full path of where the pngs have been saved
+    fullpath_out = ConvertFilenames(PngName)
+
+    path_out = os.path.dirname(fullpath_out)
+
+    filename = os.path.splitext(os.path.basename(fullpath_out))[0]
+
+    # paraview names all the files like example.0001.png etc. so we need the glob string to get this: example*.png
+
+    glob_string = os.path.join(path_out, filename) + "*.png"
+
+    gif_string =  os.path.join(path_out, filename) + ".gif"
+
+    # create string
+    graphicsmagick_string = "gm convert -delay " + str(gif_delay) + " " + glob_string + " " + gif_string
+
+    print "Making Gif using string: "
+    print graphicsmagick_string
+    os.system(graphicsmagick_string)  # make the .gif
+
+def SaveVideo(PngName, FrameRate):
+
+    # get the full path of where the pngs have been saved
+    fullpath_out = ConvertFilenames(PngName)
+
+    path_out = os.path.dirname(fullpath_out)
+
+    filename = os.path.splitext(os.path.basename(fullpath_out))[0]
+
+    # paraview names all the files like example.0001.png etc. ffmpeg needs a c-like formatting like example.0%3d.png as globbing only works on linux
+
+    list_string = os.path.join(path_out, filename) + ".%4d.png"
+
+    mp4_string = os.path.join(path_out, filename) + ".mp4"
+
+    # -c:v libx264 makes sure it works on older players
+    # -vf \"fps=25,format=yuv420p\" specifies a 25fps frame rate anyway - this makes it smooth for slower frame rates and fixes bugs with first frames and stuff
+    # -y auto yesses to overwritting files etc.
+
+
+    ffmpeg_string = "ffmpeg -framerate " + str(FrameRate) + " -i " + list_string + " -c:v libx264 -vf \"fps=25,format=yuv420p\" " + " " + mp4_string + " -y"
+    print "Making Video using string: "
+    print ffmpeg_string
+    os.system(ffmpeg_string)

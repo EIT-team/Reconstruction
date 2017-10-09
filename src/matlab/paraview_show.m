@@ -416,7 +416,9 @@ end
 
 %create animation if we want to
 if DoAnimation
-    fprintf(fid,'ShowData.SaveAnimation(''%s'', %d)',animation_path_str,FrameRate);
+    fprintf(fid,'ShowData.SaveAnimation(''%s'', %d)\n',animation_path_str,FrameRate);
+    fprintf(fid,'ShowData.SaveGif(''%s'', %d)\n',animation_path_str,FrameRate);
+    fprintf(fid,'ShowData.SaveVideo(''%s'', %d)\n',animation_path_str,FrameRate);
 end
 
 fprintf(fid,'\n');
