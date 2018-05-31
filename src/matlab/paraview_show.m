@@ -1,7 +1,7 @@
 function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
 %PARAVIEW_SHOW Display data in paraview, with transparent background, and Thresholds, with even colourbars.
-%Creates loading script and call paraview with this script at start up. 
-%Can save animations and screenshots automatically. Can also load camera file. 
+%Creates loading script and call paraview with this script at start up.
+%Can save animations and screenshots automatically. Can also load camera file.
 %Paraview and this python library must be added to path.
 
 % This has lots of inputs, but only the first two are  really needed for command window use.
@@ -90,6 +90,13 @@ if exist('Data','var') == 0 || isempty(Data)
     Data = Data';
 end
 
+%set defaults for resuing vtk flag
+if exist('ReuseVTK','var') == 0 || isempty(ReuseVTK)
+    ReuseVTK = 0;
+end
+
+
+
 %check if mesh and data match etc.
 if NumElements ~= size(Data,1)
     error('Size of data and hexes dont match');
@@ -143,8 +150,12 @@ end
 vtk_path=cell(NumSteps,1);
 vtk_path(:)={vtk_path_str};
 
-% put in path_1 path_2 form
-vtk_path=strcat(vtk_path,'_',strtrim(cellstr(num2str(TimeSteps'))')','.vtk');
+if ~ReuseVTK
+    % put in path_1 path_2 form
+    vtk_path=strcat(vtk_path,'_',strtrim(cellstr(num2str(TimeSteps'))')','.vtk');
+else
+    vtk_path=strcat(vtk_path,'.vtk');
+end
 
 % python and paraview dont like these path formats, so we need to convert
 % to /
@@ -299,11 +310,6 @@ fprintf('\n');
 
 %% Write the VTK file
 
-%set defaults for resuing vtk flag
-if exist('ReuseVTK','var') == 0 || isempty(ReuseVTK)
-    ReuseVTK = 0;
-end
-
 if ReuseVTK
     % check all vtks exist if asked not to create them
     fprintf('Using existing VTKs, checking...');
@@ -413,8 +419,8 @@ end
 %create animation if we want to
 if DoAnimation
     fprintf(fid,'ShowData.SaveAnimation(''%s'', %d)\n',animation_path_str,FrameRate);
-    fprintf(fid,'ShowData.SaveGif(''%s'', %d)\n',animation_path_str,FrameRate);
-    fprintf(fid,'ShowData.SaveVideo(''%s'', %d)\n',animation_path_str,FrameRate);
+    %fprintf(fid,'ShowData.SaveGif(''%s'', %d)\n',animation_path_str,FrameRate);
+    %fprintf(fid,'ShowData.SaveVideo(''%s'', %d)\n',animation_path_str,FrameRate);
 end
 
 fprintf(fid,'\n');

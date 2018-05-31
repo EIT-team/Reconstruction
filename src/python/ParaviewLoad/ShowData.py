@@ -163,6 +163,15 @@ def ShowThresholdData(Data, ColourMapRange = None, NegativeThresholdValues = Non
     # reset view to fit data
     renderView1.ResetCamera()
 
+    bounds = Data.GetDataInformation().GetBounds()
+
+    bounds_dx = bounds[1] - bounds[0]
+    bounds_dy = bounds[3] - bounds[2]
+    bounds_dz = bounds[5] - bounds[4]
+
+    renderView1.ResetCamera(bounds)
+
+
     # Make it create the scene
     Render()
 
@@ -581,8 +590,8 @@ def SetCamera(Data, DirectionString):
     # view.OrientationAxesVisibility = 0
     # view.ViewSize = [width, height]
     Render()
-    view.ResetCamera()
-    ResetCamera()
+    view.ResetCamera(bounds)
+    #ResetCamera()
     # for fine tuning, not having this as input at the moment as there is already too many
     config_camZoom = 1.0
     cam = GetActiveCamera()
@@ -612,8 +621,16 @@ def SaveAnimation(OutputFilename, FrameRateVal, MagnificationVal = 1.0, Orientat
     Render()
 
     OutputFilename=ConvertFilenames(OutputFilename)
-    # Create file based on magnification and FrameRate
-    WriteAnimation(OutputFilename, Magnification=MagnificationVal, FrameRate=FrameRateVal, Compression=True)
+
+
+    if type(OutputFilename) == list:
+        # Create file based on magnification and FrameRate
+        WriteAnimation(OutputFilename, Magnification=MagnificationVal, FrameRate=FrameRateVal, Compression=True)
+        print 'saving animation'
+    else:
+        SaveScreenshot(OutputFilename, magnification=MagnificationVal)
+        print 'Doing single screenshot'
+
     view.ResetCamera()
     Render()
     # Make it create the scene

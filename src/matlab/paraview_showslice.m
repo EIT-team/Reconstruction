@@ -99,7 +99,7 @@ temp_dir=[fileparts(mfilename('fullpath')) filesep 'temp'];
 temp_vtk_name = 'test';
 temp_script_name = 'test.py';
 
-if exist('SavePath','var') == 0 || isempty(VTKSavePath)
+if exist('VTKSavePath','var') == 0 || isempty(VTKSavePath)
     
     fprintf('Saving vtkdata in temp directory\n');
     %if none given use temp directory in recon repo -  this is set to be
@@ -136,8 +136,12 @@ end
 vtk_path=cell(NumSteps,1);
 vtk_path(:)={vtk_path_str};
 
-% put in path_1 path_2 form
-vtk_path=strcat(vtk_path,'_',strtrim(cellstr(num2str(TimeSteps'))')','.vtk');
+if ~ReuseVTK
+    % put in path_1 path_2 form
+    vtk_path=strcat(vtk_path,'_',strtrim(cellstr(num2str(TimeSteps'))')','.vtk');
+else
+    vtk_path=strcat(vtk_path,'.vtk');
+end
 
 % python and paraview dont like these path formats, so we need to convert
 % to /
