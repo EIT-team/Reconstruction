@@ -150,12 +150,12 @@ end
 vtk_path=cell(NumSteps,1);
 vtk_path(:)={vtk_path_str};
 
-if ~ReuseVTK
+% if ~ReuseVTK
     % put in path_1 path_2 form
     vtk_path=strcat(vtk_path,'_',strtrim(cellstr(num2str(TimeSteps'))')','.vtk');
-else
-    vtk_path=strcat(vtk_path,'.vtk');
-end
+% else
+%     vtk_path=strcat(vtk_path,'.vtk');
+% end
 
 % python and paraview dont like these path formats, so we need to convert
 % to /
