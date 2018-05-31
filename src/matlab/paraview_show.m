@@ -1,4 +1,4 @@
-function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
+function [ status ] = paraview_show( MeshStrucIn,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
 %PARAVIEW_SHOW Display data in paraview, with transparent background, and Thresholds, with even colourbars.
 % paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
 %
@@ -66,8 +66,23 @@ function [ status ] = paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg
 %% Check inputs
 
 %should be usual Mesh structure
-if ~isstruct(MeshStruc)
-    error('Need mesh structure input, with Nodes and Tetra/Hex');
+if ~isstruct(MeshStrucIn)
+    if isa(MeshStrucIn,'toastMesh')
+        disp('Converting TOAST mesh structure');
+        [vtx,idx,eltp] = MeshStrucIn.Data;
+        
+        if all(eltp == 3)
+            MeshStruc.Tetra = idx;
+            MeshStruc.Nodes = vtx;
+        else
+            error('Can only handle tetra input from toast atm');
+        end
+        
+    else
+    error('Need mesh structure input, with Nodes and Tetra/Hex or TOAST mesh');
+    end
+else
+    MeshStruc=MeshStrucIn;
 end
 
 % check we have node coordinates in Nodes, and either Hex or Tetra refences
