@@ -96,7 +96,7 @@ end
 
 %check if mesh and data match etc.
 if NumElements ~= size(Data,1)
-    error('Size of data and hexes dont match');
+    error('Size of data and elements dont match');
 end
 
 %number of files
