@@ -8,11 +8,11 @@ if size(Tetra,1) ~= size(Data,1)
     error('Size of data and hexes dont match');
 end
 
-if size(Tetra,2) ~= 4
-    error('Tetra not correct, should be numHex x 8');
+if size(Tetra,2) ~= 4 && size(Tetra,2) ~= 3
+    error('Tetra not correct, should be numHex x 4(3d) 3(2d)');
 end
 
-if size(Nodes,2) ~= 3
+if size(Nodes,2) ~= 3 && size(Nodes,2) ~= 2
     error('Nodes not correct, should be numNodes x 3');
 end
 

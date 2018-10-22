@@ -2,8 +2,8 @@ function [ status ] = paraview_show( MeshStrucIn,Data,ReuseVTK,VTKSavePath,Thr_N
 %PARAVIEW_SHOW Display data in paraview, with transparent background, and Thresholds, with even colourbars.
 % paraview_show( MeshStruc,Data,ReuseVTK,VTKSavePath,Thr_Neg,Thr_Pos,Cmap,Cmap_title,CameraStr,AnimationVTKSavePath,FrameRate)
 %
-%Creates loading script and call paraview with this script at start up. 
-%Can save animations and screenshots automatically. Can also load camera file. 
+%Creates loading script and call paraview with this script at start up.
+%Can save animations and screenshots automatically. Can also load camera file.
 %Paraview and this python library must be added to path.
 %
 % This has lots of inputs, but only the first two are  really needed for command window use.
@@ -71,15 +71,28 @@ if ~isstruct(MeshStrucIn)
         disp('Converting TOAST mesh structure');
         [vtx,idx,eltp] = MeshStrucIn.Data;
         
-        if all(eltp == 3)
+        if all(eltp == 3) || all(eltp == 15)
+            % extract the info about the tetra
             MeshStruc.Tetra = idx;
             MeshStruc.Nodes = vtx;
+            
+            if size(Data,1) == size(MeshStruc.Nodes,1)
+                disp('Converting Node data to Tetra data');
+                
+                for iElem=1:size(MeshStruc.Tetra,1)
+                    Data_temp=Data;
+                    Data(iElem)=mean(full(Data_temp(MeshStruc.Tetra(iElem,:))));                  
+                end
+                Data=full(Data);
+                
+            end
+            
         else
             error('Can only handle tetra input from toast atm');
         end
         
     else
-    error('Need mesh structure input, with Nodes and Tetra/Hex or TOAST mesh');
+        error('Need mesh structure input, with Nodes and Tetra/Hex or TOAST mesh');
     end
 else
     MeshStruc=MeshStrucIn;
