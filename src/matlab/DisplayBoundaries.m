@@ -19,7 +19,7 @@ h= trisurf(Triangle_Boundary, Nodes_Boundary(:,1), Nodes_Boundary(:,2), Nodes_Bo
 set(h,'EdgeColor',[0.3,0.3,0.3],'FaceColor','w');
 % set(h,'EdgeColor',[100,143,229]/256,'EdgeAlpha',0.5);
 % set(h,'EdgeAlpha',0.5);
-%set(h,'FaceColor','None');
+% set(h,'FaceColor','None');
 daspect([1,1,1]);
 end
 
