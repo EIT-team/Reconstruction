@@ -9,11 +9,6 @@ else
 end
 
 % find the centres of each element
-
-ind_el=[1:length(tri)];
-
-grey=tri(ind_el,:);
-
 cnts=(vtx(tri(:,1),:)+vtx(tri(:,2),:)+vtx(tri(:,3),:)+vtx(tri(:,4),:))./4;
 
 % Starting here with rounding the centres according to the hex
@@ -33,15 +28,15 @@ disp(['Number of hex = ' num2str(n_e)]);
 
 %Store the indeces of the tetra in each hex with cells, and count
 %their occurence with k, just to be sure
-cells=cell(n_e,1);
-k=zeros(n_e,1);
-for iTetra=1:length(ind)
-    cells{ind(iTetra)}=[cells{ind(iTetra)} iTetra];
-    k(ind(iTetra))=k(ind(iTetra))+1;
-    if (mod(iTetra,round(length(ind)/10))==0)
-        disp (['processing:' num2str(round(100*iTetra/length(ind))) '% done' ]);
-    end
-end
+% cells=cell(n_e,1);
+% k=zeros(n_e,1);
+% for iTetra=1:length(ind)
+%     cells{ind(iTetra)}=[cells{ind(iTetra)} iTetra];
+%     k(ind(iTetra))=k(ind(iTetra))+1;
+%     if (mod(iTetra,round(length(ind)/10))==0)
+%         disp (['processing:' num2str(round(100*iTetra/length(ind))) '% done' ]);
+%     end
+% end
 
 % cheat output
 disp (['processing:' num2str(100) '% done' ]);
@@ -71,9 +66,9 @@ Hex=J1(Hex);
 
 Mesh_hex.Hex=Hex;
 Mesh_hex.Nodes=Nodes;
-Mesh_hex.cells=cells;
+% Mesh_hex.cells=cells;
 Mesh_hex.mat=ones(n_e,1);
-Mesh_hex.k=k;
+% Mesh_hex.k=k;
 Mesh_hex.d=d;
 
 %make hex jacobian if asked 
