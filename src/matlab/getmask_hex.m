@@ -8,7 +8,7 @@ function [ Mask_hex ] = getmask_hex( Mesh_hex,Matref, SelectMatRef,ThresholdRati
 nHex=size(Mesh_hex.Hex,1);
 
 
-Mask_hex=nan(size(Matref));
+Mask_hex=zeros(nHex,1);
 
 MaskCount=0;
 
@@ -24,14 +24,16 @@ for iHex=1:nHex
     if SelectTetra > round(curTetraNum*ThresholdRatio) % if the number of tetrawith matref is greater than the thresholdratio
         MaskCount=MaskCount+1; %increment the number of hex found
         
-        Mask_hex(MaskCount)=iHex; %store idx
+        Mask_hex(iHex)=1; %store idx
         
         
     end
     
 end
 %%
-Mask_hex(isnan(Mask_hex))=[];
+Mask_hex=logical(Mask_hex);
+MaskCount=nnz(Mask_hex);
+
 
 if MaskCount >0
     fprintf('Found %d of %d Hex matching criteria\n',MaskCount,nHex);
