@@ -148,8 +148,8 @@ img_prop.img_noise_mean=img_noise_mean;
 img_prop.img_signal= img_signal;
 img_prop.sum_of_change = sum_of_change;
 
-img_prop.details.bin = bin;
+img_prop.details.bin = int8(bin);
 img_prop.details.sigma = grd_img;
-img_prop.details.volumes = vol_grd;
+img_prop.details.volumes = unique(vol_grd);
  
 
