@@ -2,8 +2,8 @@
 
 from vtk import vtkThreshold
 
-input = self.GetInputDataObject(0, 0)
-output = self.GetOutputDataObject(0)
+inp = self.GetInputDataObject(0, 0)
+outp = self.GetOutputDataObject(0)
 
 #Get min/max values
 aa = inputs[0].CellData
@@ -13,18 +13,24 @@ Range = ai.GetRange(0)
 #Define threshold filter
 thresh = vtkThreshold()
 
-thresh.SetInputData(input)
+thresh.SetInputData(inp)
 
-minthres= -10
+minthres= -1
 maxval = -500
 #maxval = Range[0]
+fwhm=Range[0] * 0.5
+print "fhwm : " + str(fwhm)
 
-current_min_thres = min(Range[0]*(1- 0.5),minthres)
-
+if abs(fwhm) < abs(minthres):
+    current_min_thres = minthres
+    print "1ess"
+else:
+    current_min_thres=fwhm
+    print "more"
 #Set threshold to half min
 thresh.ThresholdBetween(maxval,current_min_thres)
 thresh.Update()
 
-output.ShallowCopy(thresh.GetOutput())
+outp.ShallowCopy(thresh.GetOutput())
 
 print "current thres : " + str(current_min_thres)
