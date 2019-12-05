@@ -1,4 +1,4 @@
-function [Sigma,X] = eit_recon_tik0(Data,J,Savename,Noise,U,S,V,lambda)
+function [Sigma,X,sv_i] = eit_recon_tik0(Data,J,Savename,Noise,U,S,V,lambda)
 %eit_recon_tik0 Creates EIT images using 0th order tiknonov and noise based
 %correction
 
@@ -34,7 +34,7 @@ end
 %%
 disp('inverting');
 %Do inversion
-[X,cv_error] = tikhonov_CV(J,Data',lambda,n_J,U,S,V);
+[X,cv_error,sv_i] = tikhonov_CV(J,Data',lambda,n_J,U,S,V);
 fprintf('X done: %.2f min\n',toc(tstart)/60);
 
 %% Find opt lambda

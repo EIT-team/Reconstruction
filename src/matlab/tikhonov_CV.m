@@ -1,4 +1,4 @@
-function [X,cv_error] = tikhonov_CV(J,Y,lambda,nfold,U,S,V,PLOT)
+function [X,cv_error,sv_i] = tikhonov_CV(J,Y,lambda,nfold,U,S,V,PLOT)
 %
 % tSVD_CV: matrix pseudoinversion by truncated singular value
 %   decomposition (tSVD). Truncation level is set by minimizing the
